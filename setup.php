@@ -1,12 +1,12 @@
 
 <?php
 
-class SETUP_CSI 
+class SETUP_PK 
 {
-    protected $db= "fastdb"; 
-    protected $host= "localhost";
+    public $db= "punkdb"; 
+    public $host= "localhost";
     public $user= "root";
-    protected $password= "";
+    public $password= "";
 
     public function __construct($db='optional',$host='optional',$user='optional',$password='optional')
     {
@@ -38,10 +38,10 @@ require_once FASTDIR.'/includes/db_pdo-class.php';
 require_once FASTDIR.'/includes/input-class.php';
 require_once FASTDIR.'/includes/table-class.php';
 require_once FASTDIR.'/includes/tool-class.php';
+require_once FASTDIR.'/includes/manag_table-class.php';
+require_once FASTDIR.'/includes/trait-class.php';
 
 ?>
-
-<script src="punkode/asset/js/function-builder.js"></script>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
 

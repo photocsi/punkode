@@ -1,13 +1,7 @@
 <?php
 
-
-require_once FASTDIR . '/setup.php';
-require_once FASTDIR . '/includes/db_pdo-class.php';
-
-
-
 /**Descrizione della classe */
-class INPUT_CSI extends DB_CSI
+class INPUT_PK extends DB_PK
 {
 
   private $style = "";
@@ -16,26 +10,27 @@ class INPUT_CSI extends DB_CSI
   private $div_input = "col-md-4";
   private $input_class = "form-control form-control-sm";
 
+ use SANITIZE_PK;
 
   function __construct(string $table = 'optional', $db = 'optional', $host = 'optional', $user = 'optional', $password = 'optional')
   {
 
-
     parent::__construct($table, $db, $host, $user, $password);
+   
   }
 
-  public function form($action = "#", $method = 'post', $id = 'form')
+  
+  public function form_pk($action = "#", string $class='row row-cols-lg-auto g-3 align-items-center', $method = 'post', $id = 'form')
   {
-
     $action = $action;
     $method = $method;
     $id = $id;
 ?>
-    <form action="<?php echo $action ?>" method="<?php echo $method ?>" id="<?php echo $id ?>" class="row g-3">
+    <form action="<?php echo $action ?>" method="<?php echo $method ?>" id="<?php echo $id ?>" class="<?php echo $class ?>">
     <?php
   }
 
-  public function end_form()
+  public function end_form_pk()
   {
 
     ?>
@@ -43,29 +38,32 @@ class INPUT_CSI extends DB_CSI
   <?php
   }
 
-  public function button_submit($label, $name_submit, $array_options_style = array('color' => 'primary', 'size' => 'm'))
+  public function submit_pk($label, $name, $value = '1', $options = array('m', 'primary', 12))
   {
-    $submit = $name_submit;
-    switch ($array_options_style[1]) {
-      case 's':
-        $size = 'btn-sm';
-        break;
-      case 'm':
-        $size = '';
-        break;
-      case 'l':
-        $size = 'btn-lg';
-        break;
+
+    if (isset($options[0])) {
+      switch ($options[0]) {
+        case 's':
+          $size = 'btn-sm';
+          break;
+        case 'm':
+          $size = '';
+          break;
+        case 'l':
+          $size = 'btn-lg';
+          break;
+      }
     }
   ?>
-
-    <button type="submit" name="<?php echo $submit ?>" class="btn btn-<?php echo $array_options_style[0] . ' ' . $array_options_style[1] ?>"><?php echo $label ?></button>
-
+    <div class="col-<?php echo $options[2] ?>">
+      <button type="submit" name="<?php echo $name ?>" class="btn btn-<?php echo $options[1] . ' ' . $size ?>" value="<?php echo $value ?>">
+        <?php echo $label ?></button>
+    </div>
   <?php
   }
 
 
-  public function button_func($label, $name = 'submit', $type = 'submit', $id_button = '', $func_js = '')  /*  inserire testo per spiegare la funzione */
+  public function button_func_pk($label, $name = 'submit', $type = 'submit', $id_button = '', $func_js = '')  /*  inserire testo per spiegare la funzione */
   {
 
     $label = $label;
@@ -83,13 +81,179 @@ class INPUT_CSI extends DB_CSI
   <?php
   }
 
+  public function hidden_pk($name, $value){
 
-  public function input_number($label, $name, $array_options_style = array('size' => 'm'), $func_js = '')
+    ?>
+
+    
+      <div class="input-group mb-3 <?php echo (isset($size)) ? $size : null ?>">
+        <input   name="<?php echo $name ?>" value="<?php echo $value ?>" type="text" id="<?php echo $name ?>" hidden>
+      </div>
+  
+  <?php
+
+
+  }
+
+  public function number_pk(string $label, string $name, string $param = '', array $options = array('m', 12))
+  {
+    if (isset($options[0])) {
+      switch ($options[0]) {
+        case 's':
+          $size = 'input-group-sm';
+          break;
+        case 'm':
+          $size = '';
+          break;
+        case 'l':
+          $size = 'input-group-lg';
+          break;
+      }
+    }
+
+  ?>
+    <div class="col-<?php echo $options[1] ?>">
+      <div class="input-group mb-3 <?php echo (isset($size)) ?  $size : null ?>">
+        <span class="input-group-text <?php echo $size ?>"><?php echo $label ?></span>
+        <input name="<?php echo $name ?>" value="" class="form-control <?php echo (isset($size)) ?  $size : null ?>" type="number" pattern="^[0-9]+$" id="<?php echo $name ?>" <?php echo $param ?>>
+      </div>
+    </div>
+
+  <?php
+
+  }
+
+  public function number_val_pk(string $table, string $where, string $value, string $label, string $name, string $param = '', array $options = array('m', 12))
+  {
+    $value_input = array();
+    $value_input = $this->select_pk($table, array($name), $where, $value);
+
+    if (isset($options[0])) {
+      switch ($options[0]) {
+        case 's':
+          $size = 'input-group-sm';
+          break;
+        case 'm':
+          $size = '';
+          break;
+        case 'l':
+          $size = 'input-group-lg';
+          break;
+      }
+    }
+
+  ?>
+    <div class="col-<?php echo $options[1] ?>">
+      <div class="input-group mb-3 <?php echo (isset($size)) ?  $size : null ?>">
+        <span class="input-group-text <?php echo (isset($size)) ?  $size : null ?>"><?php echo $label ?></span>
+        <input name="<?php echo $name ?>" value="<?php echo $value_input[0][$name] ?>" class="form-control " type="number" pattern="^[0-9]+$" id="<?php echo $name . $value ?>" <?php echo $param ?>>
+      </div>
+    </div>
+
+  <?php
+
+  }
+
+
+
+  public function text_pk($label, $name, $param = '', $options = array('m', 12))
+  {
+    if (isset($options[0])) {
+      switch ($options[0]) {
+        case 's':
+          $size = 'input-group-sm';
+          break;
+        case 'm':
+          $size = '';
+          break;
+        case 'l':
+          $size = 'input-group-lg';
+          break;
+      }
+    }
+
+
+  ?>
+
+    <div class="col-<?php echo $options[1] ?>">
+      <div class="input-group mb-3 <?php echo (isset($size)) ? $size : null ?>">
+        <span class="input-group-text <?php echo (isset($size)) ?  $size : null ?>"><?php echo $label ?></span>
+        <input  <?php echo $param ?> name="<?php echo $name ?>" value="" class="form-control <?php echo (isset($size)) ?  $size : null ?> " type="text" id="<?php echo $name ?>">
+      </div>
+    </div>
+  <?php
+
+  }
+
+  public function text_val_pk($table, $where, $value, $label, $name, $param = '', $options = array('m', 12))
+  {
+    $value_input = array();
+    $value_input = $this->select_pk($table, array($name), $where, $value);
+
+    if (isset($options[0])) {
+      switch ($options[0]) {
+        case 's':
+          $size = 'input-group-sm';
+          break;
+        case 'm':
+          $size = '';
+          break;
+        case 'l':
+          $size = 'input-group-lg';
+          break;
+      }
+    }
+
+
+  ?>
+    <div class="col-<?php echo $options[1] ?>">
+      <div class="input-group mb-3 <?php (isset($size)) ?  $size : null ?>">
+        <span class="input-group-text <?php (isset($size)) ?  $size : null ?>"><?php echo $label ?></span>
+        <input name="<?php echo $name ?>" value="<?php echo $value_input[0][$name] ?>" class="form-control" type="text" id="<?php echo $name . $value ?>" <?php echo $param ?>>
+      </div>
+    </div>
+
+  <?php
+
+  }
+
+  public function email_pk($label, $name, $param, $options = array('m', 12))
   {
 
-    $function_js = $func_js;
+    if (isset($options[0])) {
+      switch ($options[0]) {   /* definisco la dimensione dell'input */
+        case 's':
+          $size = 'input-group-sm';
+          break;
+        case 'm':
+          $size = '';
+          break;
+        case 'l':
+          $size = 'input-group-lg';
+          break;
+      }
+    }
 
-    switch ($array_options_style[0]) {
+
+  ?>
+
+    <div class="col-<?php echo $options[1] ?>">
+      <div class="input-group mb-3 <?php echo $size ?>">
+        <span class="input-group-text <?php echo $size ?>"><?php echo $label ?></span>
+        <input name="<?php echo $name ?>" value="" class="form-control <?php echo $size ?>" type="email" id="<?php echo $name ?>" <?php echo $param ?>>
+      </div>
+    </div>
+
+  <?php
+
+  }
+
+  public function email_val_pk($table, $where, $value, $label, $name, $param, $options = array('m', 12))
+  {
+    $value_input = array();
+    $value_input = $this->select_pk($table, array($name), $where, $value);
+
+    switch ($options[0]) {
       case 's':
         $size = 'input-group-sm';
         break;
@@ -102,21 +266,52 @@ class INPUT_CSI extends DB_CSI
     }
 
   ?>
-    <div class="input-group mb-3 <?php echo $size ?>">
-      <span class="input-group-text <?php echo $size ?>"><?php echo $label ?></span>
-      <input name="<?php echo $name ?>" value="" class="form-control <?php echo $size ?>" type="number" id="<?php echo $name ?>" <?php echo $func_js ?>>
+    <div class="col-<?php echo $options[1] ?>">
+      <div class="input-group mb-3 <?php echo $size ?>">
+        <span class="input-group-text <?php echo $size ?>"><?php echo $label ?></span>
+        <input name="<?php echo $name ?>" value="<?php echo $value_input[0][$name] ?>" class="form-control" type="email" id="<?php echo $name . $value ?>" <?php echo $param ?>>
+      </div>
     </div>
 
   <?php
 
   }
 
-  public function input_number_value($table, $where, $value, $label, $name, $array_options_style = array('size' => 'm'), $func_js = '')
+  public function date_pk($label, $name, $param = '', $options = array('m', 12))
+  {
+
+    switch ($options[0]) {   /* definisco la dimensione dell'input */
+      case 's':
+        $size = 'input-group-sm';
+        break;
+      case 'm':
+        $size = '';
+        break;
+      case 'l':
+        $size = 'input-group-lg';
+        break;
+    }
+
+
+  ?>
+
+    <div class="col-<?php echo $options[1] ?>">
+      <div class="input-group mb-3 <?php echo $size ?>">
+        <span class="input-group-text <?php echo $size ?>"><?php echo $label ?></span>
+        <input name="<?php echo $name ?>" value="" class="form-control <?php echo $size ?>" type="date" id="<?php echo $name ?>" <?php echo $param ?>>
+      </div>
+    </div>
+
+  <?php
+
+  }
+
+  public function date_val_pk($table, $where, $value, $label, $name, $param = '', $options = array('m', 12))
   {
     $value_input = array();
 
-    $value_input = $this->select($table, array($name), $where, $value);
-    switch ($array_options_style[0]) {
+    $value_input = $this->select_pk($table, array($name), $where, $value);
+    switch ($options[0]) {
       case 's':
         $size = 'input-group-sm';
         break;
@@ -128,26 +323,25 @@ class INPUT_CSI extends DB_CSI
         break;
     }
 
-  ?>
 
-    <div class="input-group mb-3 <?php echo $size ?>">
-      <span class="input-group-text <?php echo $size ?>"><?php echo $label ?></span>
-      <input name="<?php echo $name ?>" value="<?php echo $value_input[0][$name] ?>" class="form-control " type="number" id="<?php echo $name . $value ?>" <?php echo $func_js ?>>
-      <!-- <button class="btn btn-outline-danger" type="button" id=""  onclick="update(<?php /* echo '\''.$table.'\','.'\''.$name.'\','.'\''.$where.'\','.'\''.$value.'\'' */ ?>)">Modifica</button> -->
+  ?>
+    <div class="col-<?php echo $options[1] ?>">
+      <div class="input-group mb-3 <?php echo $size ?>">
+        <span class="input-group-text <?php echo $size ?>"><?php echo $label ?></span>
+        <input name="<?php echo $name ?>" value="<?php echo $value_input[0][$name] ?>" class="form-control" type="date" id="<?php echo $name . $value ?>" <?php echo $param ?>>
+      </div>
     </div>
 
   <?php
 
   }
 
-
-
-  public function input_text($label, $name, $array_options_style = array('size' => 'm'), $function_js = '')
+  public function longText_pk(string $label, string $name, string $param = '', array $options = array('m', 12))
   {
 
-    $function_js = $function_js;
 
-    switch ($array_options_style[0]) {
+
+    switch ($options[0]) {   /* definisco la dimensione dell'input */
       case 's':
         $size = 'input-group-sm';
         break;
@@ -162,22 +356,23 @@ class INPUT_CSI extends DB_CSI
 
   ?>
 
+    <div class="col-<?php echo $options[1] ?>">
+      <div class="input-group mb-3 <?php echo $size ?>">
+        <span class="input-group-text <?php echo $size ?>"><?php echo $label ?></span>
 
-    <div class="input-group mb-3 <?php echo $size ?>">
-      <span class="input-group-text <?php echo $size ?>"><?php echo $label ?></span>
-      <input name="<?php echo $name ?>" value="" class="form-control <?php echo $size ?>" type="text" id="<?php echo $name ?>" <?php echo $function_js ?>>
+        <textarea name="<?php echo $name ?>" value="" class="form-control <?php echo $size ?>" id="<?php echo $name ?>" <?php echo $param ?>></textarea>
+      </div>
     </div>
-
   <?php
 
   }
 
-  public function input_text_value($table, $where, $value, $label, $name, $array_options_style = array('lenght_input' => 8, 'size' => 'm'), $func_js = '')
+  public function longText_val_pk($table, $where, $value, $label, $name, $param = '', $options = array('m', 12))
   {
     $value_input = array();
 
-    $value_input = $this->select($table, array($name), $where, $value);
-    switch ($array_options_style[0]) {
+    $value_input = $this->select_pk($table, array($name), $where, $value);
+    switch ($options[0]) {
       case 's':
         $size = 'input-group-sm';
         break;
@@ -191,13 +386,108 @@ class INPUT_CSI extends DB_CSI
 
 
   ?>
-    <div class="input-group mb-3 <?php echo $size ?>">
-      <span class="input-group-text <?php echo $size ?>"><?php echo $label ?></span>
-      <input name="<?php echo $name ?>" value="<?php echo $value_input[0][$name] ?>" class="form-control" type="text" id="<?php echo $name . $value ?>" <?php echo $func_js ?>>
-
+    <div class="col-<?php echo $options[1] ?>">
+      <div class="input-group mb-3 <?php echo $size ?>">
+        <span class="input-group-text <?php echo $size ?>"><?php echo $label ?></span>
+        <textarea name="<?php echo $name ?>" class="form-control" id="<?php echo $name . $value ?>" <?php echo $param ?>><?php echo $value_input[0][$name] ?></textarea>
+      </div>
     </div>
 
+  <?php
+
+  }
+
+
+  public function bool_pk(string $label, string $name, string $checked = '', string $param = '',$options = array('m', 12))
+  {
+
+
+
+  ?>
+   <div class="col-<?php echo $options[1] ?>">
+    <div class="input-group mb-3 ">
+      <div class="form-check">
+        <input class="form-check-input" name=" <?php echo $name ?>" type="checkbox" value="2" hidden checked>
+        <input class="form-check-input" name=" <?php echo $name ?>" type="checkbox" value="1" id="flexCheckDefault" <?php echo $checked ?> <?php echo $param ?>>
+        <label class="form-check-label" for="flexCheckDefault">
+          <?php echo $label ?>
+        </label>
+      </div>
+    </div></div>
+
+
+
+  <?php
+
+  }
+
+  public function bool_val_pk($table, $where, $value, $label, $name, $param = '',$options = array('m', 12))
+  {
+    $value_input = array();
+
+
+    $value_input = $this->select_pk($table, array($name), $where, $value);
+    ($value_input[0][$name] == 1) ? $checked = 'checked' : $checked = '';
+
+
+  ?>
+ <div class="col-<?php echo $options[1] ?>">
+    <div class="input-group mb-3 ">
+      <div class="form-check">
+        <input class="form-check-input" name=" <?php echo $name ?>" type="checkbox" value="2" hidden checked>
+        <input class="form-check-input" name=" <?php echo $name ?>" type="checkbox" value="1" id="<?php echo $name . $value ?>" <?php echo $checked ?> <?php echo $param ?>>
+        <label class="form-check-label" for="flexCheck <?php echo $name ?>">
+          <?php echo $label ?>
+        </label>
+      </div>
+    </div></div>
+
+
+  <?php
+
+  }
+
+  public function option_pk(string $label, string $name, array $selection, string $param = '', $options = array('m', 12))
+  {
+
+    $default_options=array('m', 12, 'Open this select menu');
+    if(!isset($options[0])){
+      $options[0]= $default_options[0];
+    }else if (!isset($options[1])){
+      $options[1]= $default_options[1];
+    }else if (!isset($options[2])){
+      $options[2]= $default_options[2];
+    }
+
+    switch ($options[0]) {   /* definisco la dimensione dell'input */
+      case 's':
+        $size = 'input-group-sm';
+        break;
+      case 'm':
+        $size = '';
+        break;
+      case 'l':
+        $size = 'input-group-lg';
+        break;
+    }
+
+
+  ?>
+    <div class="col-<?php echo $options[1] ?>">
+      <div class="input-group mb-3 <?php echo $size ?>">
+        <span class="input-group-text <?php echo $size ?>"><?php echo $label ?></span>
+      <select  <?php echo $param ?> name="<?php echo $name ?>" class="form-select" aria-label="Default select example">
+        <option selected ><?php echo $selection[0] ?></option>
+        <?php for ($i=1; $i <count($selection) ; $i++) { 
+          echo " <option value='$selection[$i]'>$selection[$i]</option>";
+        } 
+        ?>
+
+      </select>
+    </div>
+    </div>
 <?php
-
   }
 }
+
+?>

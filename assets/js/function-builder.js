@@ -13,9 +13,14 @@ function add($label,$width,$name){
    
 }
 
-function update(table,name,where,value){
+function updatePK(table,name,where,value){
  var valore = document.getElementById(name+value).value;
-    fetch('./punkode/connect/connect.php', {
+ if (valore != 1){
+  valore = 1;
+ }else{
+  valore = 0;
+ }
+    fetch('../punkode/connect/connect.php', {
         method: 'post',
         headers: {
          'Content-Type': 'application/x-www-form-urlencoded'
@@ -40,9 +45,9 @@ function update(table,name,where,value){
         console.log('Fetch Error :-S', err);
       });
 
-      var colorButton = document.getElementById('button' + name + value);
-          colorButton.className = "btn btn-outline-success";
-    }
+    /*   var colorButton = document.getElementById('button' + name + value);
+          colorButton.className = "btn btn-outline-success"; */
+    } 
 
 
     function reload(){
