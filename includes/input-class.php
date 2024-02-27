@@ -95,8 +95,11 @@ class INPUT_PK extends DB_PK
 
   }
 
-  public function number_pk(string $label, string $name, string $param = '', array $options = array('m', 12))
+  public function int_pk(string $label, string $name='', string $param = '', array $options = array('m', 12))
   {
+    if($name === ''){
+      $name = $label;
+    }
     if (isset($options[0])) {
       switch ($options[0]) {
         case 's':
@@ -123,10 +126,14 @@ class INPUT_PK extends DB_PK
 
   }
 
-  public function number_val_pk(string $table, string $where, string $value, string $label, string $name, string $param = '', array $options = array('m', 12))
+  public function int_val_pk(string $table, string $where, string $value, string $label, string $name='', string $param = '', array $options = array('m', 12))
   {
     $value_input = array();
     $value_input = $this->select_pk($table, array($name), $where, $value);
+
+    if($name === ''){
+      $name = $label;
+    }
 
     if (isset($options[0])) {
       switch ($options[0]) {

@@ -10,15 +10,9 @@
 
 <body>
 
-    <?php require_once '../setup.php';   ?>
-    <nav class="navbar bg-body-tertiary" style="padding: 0px 50px 0px 50px " >
-            <a class="navbar-brand" href="#" style="font-family: chiller; font-size: 3rem; ">
-                <img src="../assets/img/logo-grafica-pk-300.png" alt="Logo" width="45" height="45" class="d-inline-block align-text-top">
-               PunKode
-            </a>
-            <button class="btn btn-sm btn-outline-secondary" type="button">Smaller button</button>
-    </nav>
-
+    <?php require_once '../setup.php'; 
+    require_once 'header-document.php';
+      ?>
 
     <main>
         <div class="container-fluid text-center" style="padding: 2rem">
@@ -43,13 +37,13 @@
                 <div class="col-6" style="text-align: left; border-right: 1px solid black ; padding-left: 3rem">
 
 
-                    <a href="table.html"><h5 class="text-primary">new TABLE_PK( string 'table')</h5></a>
+                    <a href="table.php"><h5 class="text-primary">new TABLE_PK( string 'table')</h5></a>
                     </br>
                     <p>Stanziare la classe "new TABLE_PK" per visualizzare una tabella del database</p>
                     <p>La tabella conterrà già tutte le possibilità per modificare aggiungere ed eliminare i vari record</p>
                     </br></br>
 
-                    <a href="input.html">  <h5 class="text-primary">input_number ( string 'label' , string 'name', array $options[] , string 'function_js')</h5></a>
+                    <a href="int.php">  <h5 class="text-primary">input_number ( string 'label' , string 'name', array $options[] , string 'function_js')</h5></a>
                     </br>
                     <p>Crea un campo di input per numeri interi con i controlli di sicurezza sanitizzazione e validazione</p>
                     </br></br>

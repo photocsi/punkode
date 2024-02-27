@@ -8,12 +8,15 @@ class TOOL_PK extends DB_PK
 
     function __construct(string $table = 'optional', $db = 'optional', $host = 'optional', $user = 'optional', $password = 'optional')
     {
-  
-  
-      parent::__construct($table, $db, $host, $user, $password);
-      $this->update_record_pk($table);
-      $this->insert_record_pk($table);
-      $this->delete_record_pk($table);
+
+
+        parent::__construct($table, $db, $host, $user, $password);
+        $this->update_record_pk($table);
+        $this->insert_record_pk($table);
+        $this->delete_record_tool_pk($table);
+        $this->delete_column_tool_pk($table); 
+        $this->add_column_tool_pk($table);
+        
     }
 
 
@@ -43,7 +46,7 @@ class TOOL_PK extends DB_PK
                             $value_sanitiz = filter_var($array_value[$i], FILTER_SANITIZE_EMAIL);
                             break;
                         case ($array_type_column[$i]) == 'tinyint(1)':
-                                $value_sanitiz = htmlspecialchars($array_value[$i]);
+                            $value_sanitiz = htmlspecialchars($array_value[$i]);
                             break;
                         case ($array_type_column[$i]) == 'dat':
                             $value_sanitiz = htmlspecialchars($array_value[$i]);
@@ -61,7 +64,7 @@ class TOOL_PK extends DB_PK
     }
 
     public function insert_record_pk($table)
-    {    
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if (isset($_POST['insert_record'])) {
                 $array_key = array_keys($_POST);
@@ -76,7 +79,7 @@ class TOOL_PK extends DB_PK
         }
     }
 
-    public function delete_record_pk($table)
+    public function delete_record_tool_pk($table)
     {
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -90,5 +93,33 @@ class TOOL_PK extends DB_PK
         }
     }
 
+    public function delete_column_tool_pk($table)
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            if (isset($_POST['name_delete_column']) && !empty($_POST['name_delete_column']) && isset($_POST['submit_delete_column'])) {
+                $name_column = $_POST['name_delete_column'];
+                $this->delete_column_table_pk($table, $name_column);
+                header("Location: #");
+            }
+        }
+    }
 
+    public function add_column_tool_pk($table)
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            if (isset($_POST['table_name']) && !empty($_POST['table_name']) && !empty($_POST['id_name'])) {
+                $this->create_table_pk($_POST['table_name'], $_POST['id_name']);
+            } else if (isset($_POST['name_new_column']) && !empty($_POST['name_new_column']) && !empty($_POST['type_new_column'])) {
+                $name_new_column = $_POST['name_new_column'];
+                $type_new_column = $_POST['type_new_column'];
+                $length_new_column = $_POST['length_new_column'];
+                $predefinito_new_column = $_POST['predefinito_new_column'];
+                $attr_new_column = $_POST['attr_new_column'];
+                $null_new_column = $_POST['null_new_column'];
+                $codifica_new_column = $_POST['codifica_new_column'];
+                $this->create_column_table_pk($table, $name_new_column, $type_new_column, $length_new_column, $predefinito_new_column, $codifica_new_column, $attr_new_column, $null_new_column);
+                header("Location: #");
+            }
+        }
+    }
 }

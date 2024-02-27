@@ -228,13 +228,25 @@ class DB_PK extends SETUP_PK
         }
     }
 
-    public function create_field_pk(
+
+    public function delete_column_table_pk(string $name_table, string $name_column){
+
+        $create = $this->conn->prepare("ALTER TABLE $name_table  DROP $name_column  ;");
+        if ($create->execute()) {
+            echo "Colonna eliminata con successo";
+        } else {
+            die("Errore di creazione");
+        }
+
+    }
+
+    public function create_column_table_pk(
         string $name_table,
         string $name_new_field,
         string $type_new_filed,
         string $length,
         string $predefinito = '',
-        $codifica_new_column = '',
+        string $codifica = '',
         string $attr = '',
         string $null = 'NOT NULL'
     ) {
@@ -245,12 +257,12 @@ class DB_PK extends SETUP_PK
         $predefinito_sanitized = $predefinito;
         $attr_sanitized = $attr;
         $null_satized = $null;
-
+        $codifica_sanitized = $codifica;
 
         /* faccio un controllo della codifica e la trasformo nell'informazione che serve al mysql */
-        if ($codifica_new_column === 'utf8mb4_unicode_ci') {
+        if ($codifica === 'utf8mb4_unicode_ci') {
             $codifica_sanitized = 'CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci';
-        } elseif ($codifica_new_column === 'utf8mb4_general_ci') {
+        } elseif ($codifica === 'utf8mb4_general_ci') {
             $codifica_sanitized = 'CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci';
         } else {
             $codifica_sanitized = 'CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci';
@@ -258,8 +270,13 @@ class DB_PK extends SETUP_PK
 
         /*  CONTROLLO DI TUTTI I CAMPI SE SI SCEGLIE VARCHAR */
         if ($type_sanitized === 'VARCHAR') {
-            $attr_sanitized = '';
-            if ($length_sanitized ==='') {
+            if ($attr_sanitized === 'COMPRESSED=zlib') {
+                $attr_sanitized = 'COMPRESSED=zlib';
+            } else {
+                $attr_sanitized = '';
+            }
+
+            if ($length_sanitized === '') {
                 $length_sanitized = 250;
             }
 
@@ -269,8 +286,37 @@ class DB_PK extends SETUP_PK
                 $predefinito_sanitized = 'DEFAULT NULL';
             }
         }
+/*  CONTROLLO DI TUTTI I CAMPI SE SI SCEGLIE LONG TEXT */
+        if ($type_sanitized === 'LONGTEXT') {
+            if ($attr_sanitized === 'COMPRESSED=zlib') {
+                $attr_sanitized = 'COMPRESSED=zlib';
+            } else {
+                $attr_sanitized = '';
+            }
 
-           /*  CONTROLLO DI TUTTI I CAMPI SE SI SCEGLIE INT */
+            if ($length_sanitized === '') {
+                $length_sanitized = 250;
+            }
+
+            if ($predefinito_sanitized == 'CURRENT_TIMESTAMP') {
+                $predefinito_sanitized = '';
+            } elseif ($predefinito_sanitized == 'NULL') {
+                $predefinito_sanitized = 'DEFAULT NULL';
+            }
+        }
+/*  CONTROLLO DI TUTTI I CAMPI SE SI SCEGLIE INT */
+        if ($type_sanitized === 'INT') {
+            $codifica_sanitized = '';
+            if ($length_sanitized === '') {
+                $length_sanitized = 11;
+            }
+        }
+
+        /*  CONTROLLO DI TUTTI I CAMPI SE SI SCEGLIE DATE */
+        if ($type_sanitized === 'DATE') {
+            $length_sanitized = '';
+           
+        }
 
         $create = $this->conn->prepare("ALTER TABLE $name_table ADD $name_sanitized  
         $type_sanitized($length_sanitized)
@@ -279,7 +325,7 @@ class DB_PK extends SETUP_PK
         $null_satized 
         $predefinito_sanitized  ;");
         if ($create->execute()) {
-            echo "Campo Aggiunto con successo";
+            echo "Colonna aggiunta con successo";
         } else {
             die("Errore di creazione");
         }
