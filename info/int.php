@@ -47,7 +47,7 @@
                         <div class="card-body">
                             <p class="card-text">
                                 <b>$input = new INPUT_PK();
-                                    </br>  $input->int_pk('anni');</b>
+                                    </br> $input->int_pk('anni');</b>
                             </p>
                         </div>
                         <div class="card-footer text-body-secondary">
@@ -64,7 +64,7 @@
                         <div class="card-body">
                             <p class="card-text">
                                 <b>$input = new INPUT_PK();
-                                    </br>  $input->int_pk('anni','post_anni','required',array('s',4));</b>
+                                    </br> $input->int_pk('anni','post_anni','required',array('s',4));</b>
                             </p>
                         </div>
                         <div class="card-footer text-body-secondary">
@@ -82,8 +82,8 @@
                         <div class="card-body">
                             <p class="card-text">
                                 <b>$input = new INPUT_PK();
-                                </br> $input->form_pk();
-                                    </br>  $input->int_pk('anni','','required');
+                                    </br> $input->form_pk();
+                                    </br> $input->int_pk('anni','','required');
                                     </br> $input->submit_pk('submit','invia');
                                     </br> $input->end_form_pk();</b>
                             </p>
@@ -91,11 +91,11 @@
                         <div class="card-footer text-body-secondary">
                             <?php $input = new INPUT_PK();
                             $input->form_pk();
-                            $input->int_pk('anni','','required');
-                            $input->submit_pk('submit','invia');
+                            $input->int_pk('anni', '', 'required');
+                            $input->submit_pk('submit', 'invia');
                             $input->end_form_pk();
 
-                       
+
                             ?>
                         </div>
                     </div>
