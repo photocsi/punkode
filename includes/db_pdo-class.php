@@ -215,10 +215,10 @@ class DB_PK extends SETUP_PK
         }
     }
 
-    public function move_column_pk(string $name_table, string $name_column, string $after_column)
+    public function move_column_pk(string $name_table, string $name_column, string $after_column, string $tipe_column)
     {
 
-        $create = $this->conn->prepare("ALTER TABLE $name_table  MODIFY $name_column  INT AFTER $after_column; ");
+        $create = $this->conn->prepare("ALTER TABLE $name_table  MODIFY $name_column  $tipe_column AFTER $after_column; ");
         if ($create->execute()) {
             echo "Colonna spostata con successo";
         } else {
@@ -371,6 +371,26 @@ class DB_PK extends SETUP_PK
         $select = $this->conn->prepare("SELECT $this->field FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = :db_name AND TABLE_NAME = :table_name ");
         $select->bindparam(':db_name', $this->db);
         $select->bindparam(':table_name', $this->table);
+
+        $select->execute();
+
+
+        while ($row = $select->fetch(\PDO::FETCH_ASSOC)) {
+            $result[] = $row;
+        }
+        return $result;
+    }
+
+    /* seleziono tutte le info della tabella etichette del db ecc */
+    public function select_one_information_table_pk($table, $value)
+    {
+        $result = array();
+        $this->table = $table;
+
+        $select = $this->conn->prepare("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE (TABLE_SCHEMA = :db_name AND TABLE_NAME = :table_name AND COLUMN_NAME = :column_name) ");
+        $select->bindparam(':db_name', $this->db);
+        $select->bindparam(':table_name', $this->table);
+        $select->bindparam(':column_name', $value);
 
         $select->execute();
 

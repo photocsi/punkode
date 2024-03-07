@@ -38,7 +38,7 @@ class TABLE_PK extends INPUT_PK
     ?>
 
         <div class="card  m-3">
-            <h5 class="card-header text-center "><?php echo 'Tabella "' . $this->info_schema[0]["TABLE_NAME"] . '"';  ?></h5>
+            <h5 class="card-header text-center "><?php  echo 'Tabella "' . $this->info_schema[0]["TABLE_NAME"] . '"';  ?></h5>
             <div class="card-header text-center">
                 <div class="row">
                     <div class="col-6" style="text-align:start ; padding-left: 1rem">

@@ -165,18 +165,19 @@ class RESPONSE_PK extends DB_PK
     public function move_column_response_pk($table)
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            if (isset($_POST['name_move_column_pk']) && !empty($_POST['name_move_column_pk'])
-             && isset($_POST['submit_move_column_pk']) && isset($_POST['name_table_move_pk']) && !empty($_POST['name_table_move_pk']) ) {
+            if (isset($_POST['submit_move_column_pk']) && isset($_POST['name_table_move_pk']) && !empty($_POST['name_table_move_pk']) ) {
                 $name_column = $_POST['name_move_column_pk'];
                 $after_column=$_POST['name_after_column_pk'];
+
                 if(isset($table) && !empty($table)){ /* se table è stato inserito come parametro nella funzione lo utilizza */
 
                 }else{    /* altrimenti vuol dire che table non è stato specificato come parametro e prende quello di default cioe '' vuoto, quindi prendiamo il primo post che abbiamo dovuto inserire nel form di provenienza */
                     $table=$_POST['name_table_move_pk'];
                     
                 }
-                  
-                $this->move_column_pk($table, $name_column,$after_column);
+                $this->info_schema = $this->select_one_information_table_pk($table, $name_column); /* "prendo tutte le information table del campo selezionato da spostare" */
+                $type=$this->info_schema[0]['COLUMN_TYPE'];
+                $this->move_column_pk($table, $name_column,$after_column,$type);
                 header("Location: #");
             }
         }
