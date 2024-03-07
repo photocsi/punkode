@@ -1,6 +1,8 @@
 <?php
 
-require_once 'trait-class.php';
+namespace Punkode;
+
+require_once 'safety-trait-class.php';
 class DB_PK extends SETUP_PK
 {
 
@@ -10,7 +12,7 @@ class DB_PK extends SETUP_PK
     public $where = array();
     public $value = array();
 
-    use SANITIZE_PK;
+    use SAFE_PK;
 
     function __construct(string $table = 'optional', $db = 'optional', $host = 'optional', $user = 'optional', $password = 'optional')
     {
@@ -26,11 +28,11 @@ class DB_PK extends SETUP_PK
 
 
         try {
-            $this->conn = new PDO("mysql:host=$this->host;dbname=$this->db", $this->user, $this->password);
+            $this->conn = new \PDO("mysql:host=$this->host;dbname=$this->db", $this->user, $this->password);
             // Set the PDO error mode to exception
-            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
             /* ECHO "CONNESSIONE RIUSCITA"; */
-        } catch (PDOException $e) {
+        } catch (\PDOException $e) {
             die("ERRORE: Impossibile stabilire una connessione al database");
         }
     }
@@ -55,31 +57,13 @@ class DB_PK extends SETUP_PK
         $select->execute();
 
 
-        while ($row = $select->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $select->fetch(\PDO::FETCH_ASSOC)) {
             $result[] = $row;
         }
         return $result;
     }
 
-    /* seleziono tutte le info della tabella etichette del db ecc */
-    public function select_information_table_pk($table, $field)
-    {
-        $result = array();
-        $this->field = $field;
-        $this->table = $table;
 
-        $select = $this->conn->prepare("SELECT $this->field FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = :db_name AND TABLE_NAME = :table_name ");
-        $select->bindparam(':db_name', $this->db);
-        $select->bindparam(':table_name', $this->table);
-
-        $select->execute();
-
-
-        while ($row = $select->fetch(PDO::FETCH_ASSOC)) {
-            $result[] = $row;
-        }
-        return $result;
-    }
 
     /* seleziono tutti i campi di una tabella */
     public function select_all_pk($table, $field)
@@ -93,7 +77,7 @@ class DB_PK extends SETUP_PK
         $select->execute();
 
 
-        while ($row = $select->fetch(PDO::FETCH_BOTH)) {
+        while ($row = $select->fetch(\PDO::FETCH_BOTH)) {
             $result[] = $row;
         }
         return $result;
@@ -118,7 +102,7 @@ class DB_PK extends SETUP_PK
         $select->bindparam(":value1", $this->value[1]);
         $select->execute();
 
-        while ($row = $select->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $select->fetch(\PDO::FETCH_ASSOC)) {
             $result[] = $row;
         }
         return $result;
@@ -153,7 +137,7 @@ class DB_PK extends SETUP_PK
         $select->bindparam(":value2", $this->value[2]);
         $select->execute();
 
-        while ($row = $select->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $select->fetch(\PDO::FETCH_ASSOC)) {
             $result[] = $row;
         }
         return $result;
@@ -166,7 +150,7 @@ class DB_PK extends SETUP_PK
         $result = array();
         $select_inner = $this->conn->prepare("SELECT $string_field FROM {$array_table[0]} INNER JOIN {$array_table[1]} WHERE $where = $value ");
         $select_inner->execute();
-        while ($row = $select_inner->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $select_inner->fetch(\PDO::FETCH_ASSOC)) {
             $result[] = $row;
         }
         return $result;
@@ -182,40 +166,31 @@ class DB_PK extends SETUP_PK
         $string_param = implode(",", $array_param);
         $insert = $this->conn->prepare("INSERT INTO $this->db.$table ($string_fields) VALUES ($string_param) ");
         for ($i = 0; $i < count($array_param); $i++) {
-            $input_val = $this->test_input_pk($array_values[$i]);
-            $insert->bindparam($array_param[$i], $input_val);
+            $insert->bindparam($array_param[$i], $array_values[$i]);
         }
         $insert->execute();
     }
 
-    public function update($table, $field, $value, $where_field, $where_value)
+
+    public function update_pk(string $table, string $field, string $value, string $where_field, string $where_value)
     {
-        $where_param = ':' . $where_field;
-        $field_param = ':' . $field;
-        $insert = $this->conn->prepare("UPDATE $this->db.$table SET $field=$field_param WHERE $where_field = $where_param");
-        $input_val = $this->test_input_pk($value);
-        $insert->bindparam($field_param, $input_val);
-        $insert->bindparam($where_param, $where_value);
+        $sql="UPDATE $this->db.$table SET $field=:field_param WHERE $where_field = :where_param";
+        $insert = $this->conn->prepare($sql);
+        $insert->bindparam(':field_param', $value);
+        $insert->bindparam(':where_param', $where_value);
         $insert->execute();
     }
 
 
 
-    public function delete_pk($table, $where, $value_where)
+    public function delete_pk(string $table, string $where_field, string $value_where)
     {
-        $param = ':' . $where;
-        $delete = $this->conn->prepare("DELETE FROM $this->db.$table WHERE $where = $param");
+        $param = ':' . $where_field;
+        $delete = $this->conn->prepare("DELETE FROM $this->db.$table WHERE $where_field = $param");
         $delete->bindParam($param, $value_where);
         $delete->execute();
     }
 
-    public function test_input_pk($input_post)
-    {
-        $input = trim($input_post);
-        $input = stripslashes($input_post);
-        $input = htmlspecialchars($input_post);
-        return $input;
-    }
 
     public function create_table_pk(string $name_table, string $name_id)
     {
@@ -229,7 +204,8 @@ class DB_PK extends SETUP_PK
     }
 
 
-    public function delete_column_table_pk(string $name_table, string $name_column){
+    public function remove_column_pk(string $name_table, string $name_column)
+    {
 
         $create = $this->conn->prepare("ALTER TABLE $name_table  DROP $name_column  ;");
         if ($create->execute()) {
@@ -237,39 +213,50 @@ class DB_PK extends SETUP_PK
         } else {
             die("Errore di creazione");
         }
-
     }
 
-    public function create_column_table_pk(
+    public function move_column_pk(string $name_table, string $name_column, string $after_column)
+    {
+
+        $create = $this->conn->prepare("ALTER TABLE $name_table  MODIFY $name_column  INT AFTER $after_column; ");
+        if ($create->execute()) {
+            echo "Colonna spostata con successo";
+        } else {
+            die("Errore di creazione");
+        }
+    }
+
+    public function create_column_pk(
         string $name_table,
-        string $name_new_field,
-        string $type_new_filed,
-        string $length,
-        string $predefinito = '',
-        string $codifica = '',
-        string $attr = '',
-        string $null = 'NOT NULL'
+        string $name_new_column,
+        string $type_new_column,
+        string $length_new_column,
+        string $predefinito_new_column = '',
+        string $codifica_new_column = '',
+        string $attr_new_column = '',
+        string $null_new_column = 'NOT NULL'
     ) {
 
-        $name_sanitized = $name_new_field; /* sanitizare diversamente da html */
-        $type_sanitized = $type_new_filed;
-        $length_sanitized = $this->sanitize_int_pk($length);
-        $predefinito_sanitized = $predefinito;
-        $attr_sanitized = $attr;
-        $null_satized = $null;
-        $codifica_sanitized = $codifica;
+        $name_sanitized = $name_new_column; /* sanitizare diversamente da html */
+        $type_sanitized = $this->sanitize_var_pk($type_new_column);
+        $length_sanitized = $this->sanitize_int_pk($length_new_column);
+        $predefinito_sanitized = $this->sanitize_var_pk($predefinito_new_column);
+        $attr_sanitized = $this->sanitize_var_pk($attr_new_column);
+        $null_satized = $this->sanitize_var_pk($null_new_column);
+        $codifica_sanitized = $this->sanitize_var_pk($codifica_new_column);
 
         /* faccio un controllo della codifica e la trasformo nell'informazione che serve al mysql */
-        if ($codifica === 'utf8mb4_unicode_ci') {
+        if ($codifica_sanitized === 'utf8mb4_unicode_ci') {
             $codifica_sanitized = 'CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci';
-        } elseif ($codifica === 'utf8mb4_general_ci') {
+        } elseif ($codifica_sanitized === 'utf8mb4_general_ci') {
             $codifica_sanitized = 'CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci';
         } else {
             $codifica_sanitized = 'CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci';
         }
 
         /*  CONTROLLO DI TUTTI I CAMPI SE SI SCEGLIE VARCHAR */
-        if ($type_sanitized === 'VARCHAR') {
+        if ($type_sanitized === 'TEXT (varchar)') {
+            $type_sanitized = 'VARCHAR';
             if ($attr_sanitized === 'COMPRESSED=zlib') {
                 $attr_sanitized = 'COMPRESSED=zlib';
             } else {
@@ -277,7 +264,9 @@ class DB_PK extends SETUP_PK
             }
 
             if ($length_sanitized === '') {
-                $length_sanitized = 250;
+                $length_sanitized = '(80)';
+            } else {
+                $length_sanitized = '(' . $length_sanitized . ')';
             }
 
             if ($predefinito_sanitized == 'CURRENT_TIMESTAMP') {
@@ -286,7 +275,25 @@ class DB_PK extends SETUP_PK
                 $predefinito_sanitized = 'DEFAULT NULL';
             }
         }
-/*  CONTROLLO DI TUTTI I CAMPI SE SI SCEGLIE LONG TEXT */
+
+        /*  SE SI SCEGLIE TINYTEXT */
+        if ($type_sanitized === 'EMAIL (tinytext)') {
+            $type_sanitized = 'TINYTEXT';
+            $codifica_sanitized = '';
+            $length_sanitized = '';
+            if ($attr_sanitized === 'COMPRESSED=zlib') {
+                $attr_sanitized = 'COMPRESSED=zlib';
+            } else {
+                $attr_sanitized = '';
+            }
+            if ($predefinito_sanitized == 'CURRENT_TIMESTAMP') {
+                $predefinito_sanitized = '';
+            } elseif ($predefinito_sanitized == 'NULL') {
+                $predefinito_sanitized = 'DEFAULT NULL';
+            }
+        }
+
+        /*  CONTROLLO DI TUTTI I CAMPI SE SI SCEGLIE LONG TEXT */
         if ($type_sanitized === 'LONGTEXT') {
             if ($attr_sanitized === 'COMPRESSED=zlib') {
                 $attr_sanitized = 'COMPRESSED=zlib';
@@ -294,9 +301,7 @@ class DB_PK extends SETUP_PK
                 $attr_sanitized = '';
             }
 
-            if ($length_sanitized === '') {
-                $length_sanitized = 250;
-            }
+
 
             if ($predefinito_sanitized == 'CURRENT_TIMESTAMP') {
                 $predefinito_sanitized = '';
@@ -304,22 +309,47 @@ class DB_PK extends SETUP_PK
                 $predefinito_sanitized = 'DEFAULT NULL';
             }
         }
-/*  CONTROLLO DI TUTTI I CAMPI SE SI SCEGLIE INT */
-        if ($type_sanitized === 'INT') {
+        /*  CONTROLLO DI TUTTI I CAMPI SE SI SCEGLIE INT */
+        if ($type_sanitized === 'NUMBER (int)') {
+            $type_sanitized = 'INT';
             $codifica_sanitized = '';
             if ($length_sanitized === '') {
-                $length_sanitized = 11;
+                $length_sanitized = '(11)';
+            } else {
+                $length_sanitized = '(' . $length_sanitized . ')';
             }
         }
 
         /*  CONTROLLO DI TUTTI I CAMPI SE SI SCEGLIE DATE */
         if ($type_sanitized === 'DATE') {
             $length_sanitized = '';
-           
+            $codifica_sanitized = '';
+            $attr_sanitized = '';
+            switch ($predefinito_sanitized) {
+                case 'CURRENT_TIMESTAMP':
+                    $predefinito_sanitized = 'DEFAULT CURRENT_TIMESTAMP';
+                    break;
+                case 'NULL':
+                    $predefinito_sanitized = '';
+                    break;
+            }
+        }
+
+        /*   SE SI SCEGLIE PASSWORD */
+        if ($type_sanitized === 'PASSWORD') {
+            $type_sanitized = 'CHAR';
+            $attr_sanitized = '';
+            $length_sanitized = '(255)';
+
+            if ($predefinito_sanitized == 'CURRENT_TIMESTAMP') {
+                $predefinito_sanitized = '';
+            } elseif ($predefinito_sanitized == 'NULL') {
+                $predefinito_sanitized = 'DEFAULT NULL';
+            }
         }
 
         $create = $this->conn->prepare("ALTER TABLE $name_table ADD $name_sanitized  
-        $type_sanitized($length_sanitized)
+        $type_sanitized $length_sanitized
         $codifica_sanitized
         $attr_sanitized
         $null_satized 
@@ -329,5 +359,25 @@ class DB_PK extends SETUP_PK
         } else {
             die("Errore di creazione");
         }
+    }
+
+    /* seleziono tutte le info della tabella etichette del db ecc */
+    public function select_information_table_pk($table, $field)
+    {
+        $result = array();
+        $this->field = $field;
+        $this->table = $table;
+
+        $select = $this->conn->prepare("SELECT $this->field FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = :db_name AND TABLE_NAME = :table_name ");
+        $select->bindparam(':db_name', $this->db);
+        $select->bindparam(':table_name', $this->table);
+
+        $select->execute();
+
+
+        while ($row = $select->fetch(\PDO::FETCH_ASSOC)) {
+            $result[] = $row;
+        }
+        return $result;
     }
 }

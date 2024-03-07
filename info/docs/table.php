@@ -9,49 +9,47 @@
 </head>
 
 <body>
-    <?php require_once '../setup.php';
-    require_once 'header-document.php';  ?>
-    <main>
+
+  <?php  require_once 'header-document.php';  
+  require_once 'header-document.php'; 
+    use Punkode as pk; ?>
+  <main>
         <div class="container-fluid text-center" style="padding: 5rem">
             <div class="row align-items-start">
-                <div class="col-8" style="text-align: left; border-right: 1px solid grey ; padding-right: 3rem ">
-                    <h5><b style="color: #164d09">int_pk</b> (
-                        <i class="text-secondary">string</i> <b class="text-primary">$label</b>,
-                        <i class="text-secondary">string</i> <b class="text-primary">$name</b>,
-                        <i class="text-secondary">string</i> <b class="text-primary">$param</b>,
-                        <i class="text-secondary">array</i> <b class="text-primary">$options[]</b>
-
-                        )
+                <div class="col-6" style="text-align: left; border-right: 1px solid grey ; padding-right: 3rem ">
+                <h4>IT</h4>
+                    <h5><b style="color: #164d09">table_pk</b> (
+                        <i class="text-secondary">string</i> <b class="text-primary">$table</b>)
                     </h5>
                     </br>
-                    <p>Crea un campo di input per numeri interi con i controlli di sicurezza sanitizzazione e validazione</p>
+                    <p>Crea una tabella già impaginata con tutte le funzionalità di modifica, aggiungi ed elimina campo i più la possibilita di modificare le colonne del db,
+                         in futuro sarà possibile scegliere anche lo stile della tabella.</p>
                     </br></br>
                     <h5><b>Parametri</b></h5>
                     </br>
-                    <p><b class="text-primary">$label</b> <i class="text-secondary">string (obbligatorio)</i> = Etichetta dell'input da visualizzare a schermo</p>
-                    <p><b class="text-primary">$name</b> <i class="text-secondary">string (opzionale)</i> = Rappresenta l'attributo name dell'Html, riferimento per l'invio dei dati POST o GET:
-                        <br>Se lasciato libero prenderà il valore di $label
+                    <p><b class="text-primary">$table</b> <i class="text-secondary">string (obbligatorio)</i> = Nome della tabella da mostrare</p>
+                    
+                    <h5><b>Considerazioni</b></h5>
+                    </br>
+                    <p>Indubbiamente per ora lo strumento più potente di PunKode con una sola riga di codice avete a disposizione tutti gli strumenti necessari per lavorare su una tabella del database
+                        , tabella responsive da posizionare nel vostro sito dove volete, da utilizzare come un gestionale già pronto e con le misure di sicurezza come sanitizzazione , validazione che verranno ampliate sempre di più
+                        per rendere la vostra tabella sempre meno attaccabile.
+
                     </p>
-                    <p><b class="text-primary">$param</b> <i class="text-secondary">string (opzionale)</i> = Tutti i parametri aggiuntivi che vogliamo inserire nell'input<br>
-                        es: valori html come hidden o required oppure funzioni js come onclick=func() ecc. </p>
-                    <p><b class="text-primary">$option[]</b> <i class="text-secondary">array (opzionale)</i> = Varie opzioni di stile frontend:
-                        </br>primo parametro altezza del campo input 'l' Large , 'm' Medium , 's' small.
-                        </br> secondo parametro larghezza del campo input da 1 a 12.</p>
 
                     <h5><b>Esempi</b></h5>
 
                     <div class="card text-start">
                         <div class="card-header">
-                            Campo input numerico, l'attributo name sarà uguale al label quindi 'anni' , avrà una dimensione media e occuperà l'intero spazio orizzontale
+                            C'e' poco da spiegare, basta instaziare la classe e come parametro inserire il nome della tabella da visualizzare
                         </div>
                         <div class="card-body">
                             <p class="card-text">
-                                <b>$input = new INPUT_PK();
-                                    </br> $input->int_pk('anni');</b>
+                                <b>new TABLE_PK('nome_tabella');
                             </p>
                         </div>
                         <div class="card-footer text-body-secondary">
-                            <?php $input = new INPUT_PK();
+                            <?php $input = new PK\INPUT_PK();
                             $input->int_pk('anni');
                             ?>
                         </div>
@@ -68,7 +66,7 @@
                             </p>
                         </div>
                         <div class="card-footer text-body-secondary">
-                            <?php $input = new INPUT_PK();
+                            <?php $input = new PK\INPUT_PK();
                             $input->int_pk('anni', 'post_anni', 'required', array('s', 4));
                             ?>
                         </div>
@@ -81,16 +79,16 @@
                         </div>
                         <div class="card-body">
                             <p class="card-text">
-                                <b>$input = new INPUT_PK();
-                                    </br> $input->form_pk();
-                                    </br> $input->int_pk('anni','','required');
-                                    </br> $input->submit_pk('submit','invia');
-                                    </br> $input->end_form_pk();</b>
+                                <b>$input = new INPUT_PK('#',4); </b>
+                                    </br> <b>$input->form_pk();</b> <i style='color:#164d09'> // la action del form punta alla stessa pagina e ha una classe bootstrap 'row gx-3 gy-2 align-items-center'</i>
+                                    </br><b> $input->int_pk('anni','','required');</b> <i style='color:#164d09'> // l'input ha come label 'anni' e come name 'anni' accetta valori numerici int e il campo è obbligatorio</i>
+                                    </br><b> $input->submit_pk('submit','invia');</b> <i style='color:#164d09'> // il submit ha come label 'submit' e come name 'invia' in automatico e di dimensione media colore primary</i>
+                                    </br><b> $input->end_form_pk();</b>
                             </p>
                         </div>
                         <div class="card-footer text-body-secondary">
-                            <?php $input = new INPUT_PK();
-                            $input->form_pk();
+                            <?php $input = new PK\INPUT_PK();
+                            $input->form_pk('#',4);
                             $input->int_pk('anni', '', 'required');
                             $input->submit_pk('submit', 'invia');
                             $input->end_form_pk();
@@ -103,7 +101,7 @@
 
                 </div>
 
-                <div class="col-4" style="text-align: left ; padding-right: 3rem ">
+                <div class="col-6" style="text-align: left ; padding-right: 3rem ">
 
                 </div>
             </div>

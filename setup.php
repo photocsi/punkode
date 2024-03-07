@@ -1,8 +1,9 @@
-
 <?php
+namespace Punkode;
 
 class SETUP_PK 
 {
+
     public $db= "punkdb"; 
     public $host= "localhost";
     public $user= "root";
@@ -15,10 +16,11 @@ class SETUP_PK
       ($user != 'optional') ? $this->user=$user : null;
       ($password != 'optional') ? $this->password=$password : null;
 
-
+     
     }
     
 }
+
 
 define('FASTDIR', __DIR__ );
 define('FASTPAGE', __FILE__);
@@ -37,9 +39,9 @@ la password è composta da 8-16 caratteri senza spazi */
 require_once FASTDIR.'/includes/db_pdo-class.php';
 require_once FASTDIR.'/includes/input-class.php';
 require_once FASTDIR.'/includes/table-class.php';
-require_once FASTDIR.'/includes/tool-class.php';
-require_once FASTDIR.'/includes/manag_table-class.php';
-require_once FASTDIR.'/includes/trait-class.php';
+require_once FASTDIR.'/includes/response-class.php';
+require_once FASTDIR.'/includes/safety-trait-class.php';
+require_once FASTDIR.'/includes/tool-trait-class.php';
 
 ?>
 
