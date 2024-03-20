@@ -3,6 +3,7 @@
 namespace Punkode;
 
 require_once 'safety-trait-class.php';
+require_once 'manag_table-trait-class.php';
 class DB_PK extends SETUP_PK
 {
 
@@ -143,6 +144,17 @@ class DB_PK extends SETUP_PK
         return $result;
     }
 
+    public function order_db_pk(string $table, string $field){
+        $this->sanitizie_only_char($field);
+        
+        $select = $this->conn->prepare("SELECT * FROM $this->db.$table ORDER BY $field  ;");
+        $select->execute();
+
+        while ($row = $select->fetch(\PDO::FETCH_BOTH)) {
+            $result[] = $row;
+        }
+        return $result;
+    }
 
 
     public function select_innerjoin_pk($string_field, $array_table, $where, $value)
@@ -159,16 +171,20 @@ class DB_PK extends SETUP_PK
     public function insert_pk(string $table, array $array_fields, array $array_values)
     {
         $array_param = array();
-        for ($i = 0; $i < count($array_fields); $i++) {
+        $count_array_fields= count($array_fields);
+        for ($i = 0; $i < $count_array_fields; $i++) {
             $array_param[$i] = ':' . $array_fields[$i];
         }
         $string_fields = implode(",", $array_fields);
         $string_param = implode(",", $array_param);
         $insert = $this->conn->prepare("INSERT INTO $this->db.$table ($string_fields) VALUES ($string_param) ");
-        for ($i = 0; $i < count($array_param); $i++) {
+        $count_array_param=count($array_param);
+        for ($i = 0; $i < $count_array_param; $i++) {
             $insert->bindparam($array_param[$i], $array_values[$i]);
         }
         $insert->execute();
+        unset($count_array_fields);
+        unset($count_array_param);
     }
 
 
@@ -208,22 +224,14 @@ class DB_PK extends SETUP_PK
     {
 
         $create = $this->conn->prepare("ALTER TABLE $name_table  DROP $name_column  ;");
-        if ($create->execute()) {
-            echo "Colonna eliminata con successo";
-        } else {
-            die("Errore di creazione");
-        }
+        $create->execute();
     }
 
     public function move_column_pk(string $name_table, string $name_column, string $after_column, string $tipe_column)
     {
 
         $create = $this->conn->prepare("ALTER TABLE $name_table  MODIFY $name_column  $tipe_column AFTER $after_column; ");
-        if ($create->execute()) {
-            echo "Colonna spostata con successo";
-        } else {
-            die("Errore di creazione");
-        }
+        $create->execute();
     }
 
     public function create_column_pk(
@@ -301,7 +309,7 @@ class DB_PK extends SETUP_PK
                 $attr_sanitized = '';
             }
 
-
+            $length_sanitized = '';
 
             if ($predefinito_sanitized == 'CURRENT_TIMESTAMP') {
                 $predefinito_sanitized = '';
@@ -348,6 +356,15 @@ class DB_PK extends SETUP_PK
             }
         }
 
+      /*  CONTROLLO DI TUTTI I CAMPI SE SI SCEGLIE BOOLEAN */
+      if ($type_sanitized === 'BOOLEAN') {
+        $type_sanitized = 'TINYINT';
+        $codifica_sanitized = '';
+        $length_sanitized = '(1)';
+        
+    }
+
+
         $create = $this->conn->prepare("ALTER TABLE $name_table ADD $name_sanitized  
         $type_sanitized $length_sanitized
         $codifica_sanitized
@@ -355,7 +372,7 @@ class DB_PK extends SETUP_PK
         $null_satized 
         $predefinito_sanitized  ;");
         if ($create->execute()) {
-            echo "Colonna aggiunta con successo";
+            echo "";
         } else {
             die("Errore di creazione");
         }
@@ -368,7 +385,7 @@ class DB_PK extends SETUP_PK
         $this->field = $field;
         $this->table = $table;
 
-        $select = $this->conn->prepare("SELECT $this->field FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = :db_name AND TABLE_NAME = :table_name ");
+        $select = $this->conn->prepare("SELECT $this->field FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = :db_name AND TABLE_NAME = :table_name ORDER BY ORDINAL_POSITION");
         $select->bindparam(':db_name', $this->db);
         $select->bindparam(':table_name', $this->table);
 
@@ -382,7 +399,7 @@ class DB_PK extends SETUP_PK
     }
 
     /* seleziono tutte le info della tabella etichette del db ecc */
-    public function select_one_information_table_pk($table, $value)
+    public function select_one_information_table_pk(string $table, string $column_name)
     {
         $result = array();
         $this->table = $table;
@@ -390,7 +407,7 @@ class DB_PK extends SETUP_PK
         $select = $this->conn->prepare("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE (TABLE_SCHEMA = :db_name AND TABLE_NAME = :table_name AND COLUMN_NAME = :column_name) ");
         $select->bindparam(':db_name', $this->db);
         $select->bindparam(':table_name', $this->table);
-        $select->bindparam(':column_name', $value);
+        $select->bindparam(':column_name', $column_name);
 
         $select->execute();
 

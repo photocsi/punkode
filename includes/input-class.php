@@ -1,6 +1,10 @@
 <?php
 namespace Punkode;
-/**Descrizione della classe */
+/**Descrizione della classe 
+ * 
+ * 
+*/
+require_once PKDIR.'/includes/db_pdo-class.php';
 class INPUT_PK extends DB_PK
 {
 
@@ -22,6 +26,7 @@ class INPUT_PK extends DB_PK
   public function form_pk($action = "#", string $class = '', $method = 'post', $id = '')
   {
    
+  /*   scelgo lo stile di impaginazione bootstrap per il mio form */
     switch ($class) {
       case '1':
         $class = 'row g-3';
@@ -145,7 +150,7 @@ class INPUT_PK extends DB_PK
     <div class="col-<?php echo $options[1] ?>">
       <div class="input-group mb-3 <?php echo (isset($size)) ?  $size : null ?>">
         <span class="input-group-text <?php echo $size ?>"><?php echo $label ?></span>
-        <input name="<?php echo $name ?>" value="" class="form-control <?php echo (isset($size)) ?  $size : null ?>" type="number" pattern="^[0-9]+$" id="<?php echo $name ?>" <?php echo $param ?>>
+        <input name="<?php echo $name ?>" value="" class="form-control <?php echo (isset($size)) ?  $size : null ?>" type="number" pattern="^[0-9]+$"  <?php echo $param ?>>
       </div>
     </div>
 
@@ -185,7 +190,7 @@ class INPUT_PK extends DB_PK
     <div class="col-<?php echo $options[1] ?>">
       <div class="input-group mb-3 <?php echo (isset($size)) ?  $size : null ?>">
         <span class="input-group-text <?php echo (isset($size)) ?  $size : null ?>"><?php echo $label ?></span>
-        <input name="<?php echo $name ?>" value="<?php echo $value_validate ?>" class="form-control " type="number" pattern="^[0-9]+$" id="<?php echo $name . $value ?>" <?php echo $param ?>>
+        <input name="<?php echo $name ?>" value="<?php echo $value_validate ?>" class="form-control " type="number" pattern="^[0-9]+$" <?php echo $param ?>>
       </div>
     </div>
 
@@ -218,8 +223,8 @@ class INPUT_PK extends DB_PK
     <div class="col-<?php echo $options[1] ?>">
       <div class="input-group mb-3 <?php echo (isset($size)) ? $size : null ?>">
         <span class="input-group-text <?php echo (isset($size)) ?  $size : null ?>"><?php echo $label ?></span>
-        <input <?php echo $param ?> name="<?php echo $name ?>" value="<?php echo (isset($value)) ?  $value : null ?>" 
-        class="form-control <?php echo (isset($size)) ?  $size : null ?> " type="text" id="<?php echo $name ?>">
+        <input  type="text" name="<?php echo $name ?>" value="<?php echo (isset($value)) ?  $value : null ?>" 
+        class="form-control <?php echo (isset($size)) ?  $size : null ?> "  <?php echo $param ?> >
       </div>
     </div>
   <?php
@@ -246,12 +251,13 @@ class INPUT_PK extends DB_PK
     }
     (!isset($options[1])) ? $options[1]='12' : null;
    
+    $value_validate= $this->validate_var_pk($value_input[0][$name]);
 
   ?>
     <div class="col-<?php echo $options[1] ?>">
       <div class="input-group mb-3 <?php (isset($size)) ?  $size : null ?>">
         <span class="input-group-text <?php (isset($size)) ?  $size : null ?>"><?php echo $label ?></span>
-        <input name="<?php echo $name ?>" value="<?php echo $value_input[0][$name] ?>" class="form-control" type="text" id="<?php echo $name . $value ?>" <?php echo $param ?>>
+        <input type="text" name="<?php echo $name ?>" value="<?php echo $value_validate ?>" class="form-control"   <?php echo $param ?>>
       </div>
     </div>
 
@@ -283,7 +289,7 @@ class INPUT_PK extends DB_PK
     <div class="col-<?php echo $options[1] ?>">
       <div class="input-group mb-3 <?php echo $size ?>">
         <span class="input-group-text <?php echo $size ?>"><?php echo $label ?></span>
-        <input name="<?php echo $name ?>" value="" class="form-control <?php echo $size ?>" type="email" id="<?php echo $name ?>" <?php echo $param ?>>
+        <input type="email" name="<?php echo $name ?>" value="" class="form-control <?php echo $size ?>"  <?php echo $param ?>>
       </div>
     </div>
 
@@ -312,7 +318,7 @@ class INPUT_PK extends DB_PK
     <div class="col-<?php echo $options[1] ?>">
       <div class="input-group mb-3 <?php echo $size ?>">
         <span class="input-group-text <?php echo $size ?>"><?php echo $label ?></span>
-        <input name="<?php echo $name ?>" value="<?php echo $value_input[0][$name] ?>" class="form-control" type="email" id="<?php echo $name . $value ?>" <?php echo $param ?>>
+        <input type="email" name="<?php echo $name ?>" value="<?php echo $value_input[0][$name] ?>" class="form-control"  <?php echo $param ?>>
       </div>
     </div>
 
@@ -341,7 +347,7 @@ class INPUT_PK extends DB_PK
     <div class="col-<?php echo $options[1] ?>">
       <div class="input-group mb-3 <?php echo $size ?>">
         <span class="input-group-text <?php echo $size ?>"><?php echo $label ?></span>
-        <input name="<?php echo $name ?>" value="" class="form-control <?php echo $size ?>" type="date" id="<?php echo $name ?>" <?php echo $param ?>>
+        <input type="date" name="<?php echo $name ?>" value="" class="form-control <?php echo $size ?>"  <?php echo $param ?>>
       </div>
     </div>
 
@@ -373,7 +379,7 @@ class INPUT_PK extends DB_PK
     <div class="col-<?php echo $options[1] ?>">
       <div class="input-group mb-3 <?php echo $size ?>">
         <span class="input-group-text <?php echo $size ?>"><?php echo $label ?></span>
-        <input name="<?php echo $name ?>" value="<?php echo $value_validate ?>" class="form-control" type="date" id="<?php echo $name . $value ?>" <?php echo $param ?>>
+        <input type="date" name="<?php echo $name ?>" value="<?php echo $value_validate ?>" class="form-control"  <?php echo $param ?>>
       </div>
     </div>
 
@@ -405,7 +411,7 @@ class INPUT_PK extends DB_PK
       <div class="input-group mb-3 <?php echo $size ?>">
         <span class="input-group-text <?php echo $size ?>"><?php echo $label ?></span>
 
-        <textarea name="<?php echo $name ?>" value="" class="form-control <?php echo $size ?>" id="<?php echo $name ?>" <?php echo $param ?>></textarea>
+        <textarea name="<?php echo $name ?>" value="" class="form-control <?php echo $size ?>" <?php echo $param ?>></textarea>
       </div>
     </div>
   <?php
@@ -434,7 +440,7 @@ class INPUT_PK extends DB_PK
     <div class="col-<?php echo $options[1] ?>">
       <div class="input-group mb-3 <?php echo $size ?>">
         <span class="input-group-text <?php echo $size ?>"><?php echo $label ?></span>
-        <textarea name="<?php echo $name ?>" class="form-control" id="<?php echo $name . $value ?>" <?php echo $param ?>><?php echo $value_input[0][$name] ?></textarea>
+        <textarea name="<?php echo $name ?>" class="form-control"  <?php echo $param ?>><?php echo $value_input[0][$name] ?></textarea>
       </div>
     </div>
 
@@ -481,7 +487,7 @@ class INPUT_PK extends DB_PK
       <div class="input-group mb-3 ">
         <div class="form-check">
           <input class="form-check-input" name=" <?php echo $name ?>" type="checkbox" value="2" hidden checked>
-          <input class="form-check-input" name=" <?php echo $name ?>" type="checkbox" value="1" id="<?php echo $name . $value ?>" <?php echo $checked ?> <?php echo $param ?>>
+          <input class="form-check-input" name=" <?php echo $name ?>" type="checkbox" value="1" <?php echo $checked ?> <?php echo $param ?>>
           <label class="form-check-label" for="flexCheck <?php echo $name ?>">
             <?php echo $label ?>
           </label>
@@ -558,7 +564,7 @@ class INPUT_PK extends DB_PK
     <div class="col-<?php echo $options[1] ?>">
       <div class="input-group mb-3 <?php echo (isset($size)) ? $size : null ?>">
         <span class="input-group-text <?php echo (isset($size)) ?  $size : null ?>"><?php echo $label ?></span>
-        <input <?php echo $param ?> name="<?php echo $name ?>" value="" class="form-control <?php echo (isset($size)) ?  $size : null ?> " type="password" id="<?php echo $name ?>">
+        <input type="password" <?php echo $param ?> name="<?php echo $name ?>" value="" class="form-control <?php echo (isset($size)) ?  $size : null ?> "  >
       </div>
     </div>
   <?php
@@ -591,7 +597,7 @@ class INPUT_PK extends DB_PK
     <div class="col-<?php echo $options[1] ?>">
       <div class="input-group mb-3 <?php (isset($size)) ?  $size : null ?>">
         <span class="input-group-text <?php (isset($size)) ?  $size : null ?>"><?php echo $label ?></span>
-        <input name="<?php echo $name ?>" value="<?php echo $value_validate ?>" class="form-control" type="password" id="<?php echo $name . $value ?>" <?php echo $param ?>>
+        <input type="password" name="<?php echo $name ?>" value="<?php echo $value_validate ?>" class="form-control"  <?php echo $param ?>>
       </div>
     </div>
 

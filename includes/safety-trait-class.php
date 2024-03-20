@@ -27,7 +27,7 @@ trait SAFE_PK
 
     public function validate_var_pk($value)
     {
-        $value_decode = html_entity_decode($value);
+        $value_decode = html_entity_decode((string) $value);
         $value_sanitized = htmlspecialchars($value_decode);
 
         return $value_sanitized;
@@ -46,8 +46,8 @@ trait SAFE_PK
         if ($value_control != '0000-00-00') {
             $date = date_create($value_control);
             $value_sanitized = date_format($date, 'd/M/y');
-        }else{
-            $value_sanitized='';
+        } else {
+            $value_sanitized = '';
         }
         return $value_sanitized;
     }
@@ -97,6 +97,17 @@ trait SAFE_PK
     {
         $value_sanitized = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
 
+        return $value_sanitized;
+    }
+
+    public function sanitizie_only_char($value)
+    {
+        $regex = '/^[a-z _ A-Z]+$/';
+        if (preg_match($regex,$value)) {
+            $value_sanitized = str_replace(' ','_', $value);
+        } else {
+            $value_sanitized = '';
+        }
         return $value_sanitized;
     }
 }

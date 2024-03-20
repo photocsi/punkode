@@ -1,4 +1,5 @@
 
+document.addEventListener('activeElement', updatePK('come','testo','id_come','23'));
 
 function add($label,$width,$name){
     var label = document.getElementById($label).value;
@@ -20,7 +21,7 @@ function updatePK(table,name,where,value){
  }else{
   valore = 0;
  }
-    fetch('../punkode/connect/connect.php', {
+    fetch('punkode/includes/ajax-class.php', {
         method: 'post',
         headers: {
          'Content-Type': 'application/x-www-form-urlencoded'

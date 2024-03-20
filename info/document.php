@@ -5,13 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <link href="asset\bootstrap-5.3.2-dist\css\bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+
 </head>
 
 <body>
 
     <?php require_once '../setup.php'; 
-   
+
       ?>
 <nav class="navbar bg-body-tertiary" style="padding: 0px 50px 0px 50px " >
             <a class="navbar-brand" href="document.php" style="font-family: chiller; font-size: 3rem; ">
@@ -20,7 +21,9 @@
             </a>
             <button class="btn btn-sm btn-outline-secondary" type="button">Smaller button</button>
     </nav>
+ 
     <main>
+    <?php include 'docs/offcanvas.html' ?>
         <div class="container-fluid text-center" style="padding: 2rem">
             <div class="row align-items-start">
                 <div class="col-3" style="text-align: left; border-right: 1px solid grey ; padding-right: 3rem ">
@@ -78,9 +81,13 @@
 
         </div>
 
+        </div> <!-- questi ultimi 3 div chiudono la sidebar -->
+    </div>
+</div> <!-- ultimo div che chiude la side bar, da aggiungere al fondo di ogni pagina -->
     </main>
 
-    <script src="asset/bootstrap-5.3.2-dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
 
 </body>
 
