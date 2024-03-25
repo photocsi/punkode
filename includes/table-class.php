@@ -172,11 +172,11 @@ class TABLE_PK extends INPUT_PK
     }
     
  /*    creo una form automaticamente solo indicando la tebella e i campi da visualizzare */
-    public function form_custom_pk(string $table, array $fields)
+    public function form_custom_pk(string $table, array $fields, array $option=array('action'=>'#','style'=>3))
     {
         
 
-        $this->form_pk('#', 3);
+        $this->form_pk($option['action'],$option['style']);
         foreach ($fields as $field) {
 
             $tmp = $this->select_one_information_table_pk($table, $field);
@@ -198,11 +198,40 @@ class TABLE_PK extends INPUT_PK
                     break;
             }
         }
-        $this->submit_pk('Salva', 'submit_salva');
+        $this->submit_pk('Salva', 'submit_save');
         $this->end_form_pk();
     }
 
+public function form_custom_val_pk(string $table,string $where,string $value, array $fields, array $option=array('action'=>'#','style'=>3)){
 
+    $this->form_pk($option['action'],$option['style']);
+
+    foreach ($fields as $field) {
+
+        $tmp = $this->select_one_information_table_pk($table, $field);
+        $type = TOOL_PK::set_column_type_pk($tmp[0]['COLUMN_TYPE']);
+        switch ($type) {
+            case 'var':
+            case 'cha':
+            case 'text':
+                $this->text_val_pk($table, $where, $value,$field, $field);
+                break;
+            case 'int':
+                $this->int_val_pk($table, $where, $value,$field, $field);
+                break;
+            case 'lon':
+                $this->longText_val_pk($table, $where, $value,$field, $field);
+                break;
+            case 'dat':
+                $this->date_val_pk($table, $where, $value,$field, $field);
+                break;
+        }
+    }
+    $this->submit_pk('Salva', 'submit_val_save');
+    $this->end_form_pk();
+
+
+}
     public function update_modal_pk(string $table, string $action, int $id, string $label = 'Edit')
     {
 
