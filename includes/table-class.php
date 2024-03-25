@@ -1,7 +1,8 @@
 <?php
 
 namespace Punkode;
-require_once PKDIR.'/includes/input-class.php';
+
+require_once PKDIR . '/includes/input-class.php';
 class TABLE_PK extends INPUT_PK
 {
     private  $info_schema = array();  /* informazioni della tabella information_table */
@@ -24,10 +25,188 @@ class TABLE_PK extends INPUT_PK
         $this->end_form_pk();
     }
 
+    public function template_classic_pk(string $table, string $element = 'all', array $exclude = array(), string $action = '#')
+    {
+
+        $this->info_schema = $this->select_information_table_pk($table, '*'); /* prendo le informazioni della tabella information_table */
+        $select_all = $this->select_all_pk($table, '*');  /* selezione di tutti i record e tutti i campi della tabella */
+        if (isset($select_all[0])) {
+            $length_select_all = count($select_all[0]) / 2;
+        }
+
+?>
+
+        <div class="card  m-3">
+            <a href=<?php __FILE__ ?>>
+                <h5 class="card-header text-center "><?php echo 'Tabella "' . $this->info_schema[0]["TABLE_NAME"] . '"';  ?></h5>
+            </a>
+            <div class="card-header text-center">
+                <div class="row">
+                    <div class="col-4" style="text-align:start ; padding-left: 1rem">
+                        <?php ($element === 'all' || $element === 'edit') ? $this->insert_modal_pk($table, $action, 'Add Record') : null ?>
+                    </div>
+                    <div class="col-5" style="text-align:start ; padding-left: 1rem">
+
+                    </div>
+                    <div class="col-1" style="text-align:end ; padding-right: 1rem">
+                        <?php
+                        ($element === 'all') ? $this->add_column_modal_pk($action) : null;
+                        ?>
+                    </div>
+                    <div class="col-1" style="text-align:end ; padding-right: 1rem">
+                        <?php
+
+                        ($element === 'all') ? $this->remove_column_modal_pk($action) : null;
+
+                        ?>
+                    </div>
+                    <div class="col-1" style="text-align:end ; padding-right: 1rem">
+                        <?php
+
+                        ($element === 'all') ? $this->move_column_modal_pk($action) : null;
+                        ?>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered border-primary">
+                        <thead>
+                            <tr>
+                                <?php
+                                if ($element === 'all' || $element === 'edit') {
+                                    echo '<th>Edit</th>';
+                                }
+
+                                $lenght_infoschema = count($this->info_schema);
+                                for ($i = 0; $i < $lenght_infoschema; $i++) {
+                                    if (!in_array($this->info_schema[$i]["COLUMN_NAME"], $exclude)) {
+                                        echo "<th scope='col'>{$this->info_schema[$i]["COLUMN_NAME"]}</th>";
+                                    }
+                                }
+                                ?>
+
+
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            $number_row =  count($select_all);
+                            for ($r = 0; $r < $number_row; $r++) {
+                                echo '<tr>';
+                                if ($element === 'all' || $element === 'edit') { /* la scelta per inserire il pulsante edit oppure no */
+                                    echo '<td>';
+                                    $this->update_modal_pk($table, $action, $select_all[$r][0], 'Edit');
+                                    echo '</td>';
+                                }
+
+                                for ($i = 0; $i < $length_select_all; $i++) {
+                                    switch ($this->info_schema[$i]['COLUMN_TYPE']) {
+                                        case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 3) === 'int' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude):
+                                            $validate = $this->validate_int_pk($select_all[$r][$i]);
+                                            echo " <td>$validate</td>";
+                                            break;
+
+                                        case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 3) === 'var' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude):
+                                            $validate = $this->validate_var_pk($select_all[$r][$i]);
+                                            echo "<td> $validate </td>";
+                                            break;
+
+                                        case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 3) === 'tex' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude):
+                                            $validate = $this->validate_var_pk($select_all[$r][$i]);
+                                            echo " <td> $validate</td>";
+                                            break;
+
+                                        case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 3) === 'cha' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude):  /*  per la password */
+                                            $validate = $this->validate_pass_pk($select_all[$r][$i]);
+                                            echo " <td> $validate </td>";
+                                            break;
+
+                                        case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 5) === 'tinyt' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude): /*  valore email */
+                                            if ($this->validate_email_pk($select_all[$r][$i])) {
+                                                $validate = $this->validate_email_pk($select_all[$r][$i]);
+                                                echo "<td>$validate</td>";
+                                            } else {
+                                                echo "<td>E-mail non valida</td>";
+                                            }
+                                            break;
+
+                                        case $this->info_schema[$i]['COLUMN_TYPE'] == 'tinyint(1)' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude):  /*  valore booleano */
+                                            ($select_all[$r][$i] === 1) ? $value_check = 'X' : $value_check = 'O';
+                                            echo " <td> $value_check </td>";
+                                            break;
+
+                                        case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 5) == 'tinyi' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude):
+                                            $validate = $this->validate_int_pk($select_all[$r][$i]);
+                                            echo " <td>$validate</td>";
+                                            echo " <td> {$this->select_all[$r][$i]}</td>";
+                                            break;
+
+                                        case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 3) == 'dat' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude): /* VALORE DATA */
+                                            $validate = $this->validate_date_pk($select_all[$r][$i]);
+                                            echo " <td> $validate </td>";
+                                            break;
+
+                                        case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 3) == 'lon' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude):
+                                            $validate = $this->validate_var_pk($select_all[$r][$i]);
+                                            echo " <td> $validate</td>";
+                                            break;
+                                    }
+                                }
+                            ?>
+                                </tr>
+
+                            <?php  }
+                            unset($length_select_all);
+                            unset($number_row);
+                            ?>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    <?php
+
+    }
+    
+ /*    creo una form automaticamente solo indicando la tebella e i campi da visualizzare */
+    public function form_custom_pk(string $table, array $fields)
+    {
+        
+
+        $this->form_pk('#', 3);
+        foreach ($fields as $field) {
+
+            $tmp = $this->select_one_information_table_pk($table, $field);
+            $type = TOOL_PK::set_column_type_pk($tmp[0]['COLUMN_TYPE']);
+            switch ($type) {
+                case 'var':
+                case 'cha':
+                case 'text':
+                    $this->text_pk($field, $field);
+                    break;
+                case 'int':
+                    $this->int_pk($field, $field);
+                    break;
+                case 'lon':
+                    $this->longText_pk($field, $field);
+                    break;
+                case 'dat':
+                    $this->date_pk($field, $field);
+                    break;
+            }
+        }
+        $this->submit_pk('Salva', 'submit_salva');
+        $this->end_form_pk();
+    }
+
+
     public function update_modal_pk(string $table, string $action, int $id, string $label = 'Edit')
     {
 
-?>
+    ?>
         <!-- Button trigger modal -->
         <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModal<?php echo $id  ?>"><?php echo $label; ?> </button>
 
@@ -42,7 +221,7 @@ class TABLE_PK extends INPUT_PK
                     <div class="modal-body">
 
                         <?php
-                        $this->update_row_tool_pk($table, $action, $id);
+                        $this->update_row_manag_pk($table, $action, $id);
 
                         ?>
 
@@ -80,7 +259,7 @@ class TABLE_PK extends INPUT_PK
                     <div class="modal-body">
 
                         <?php
-                        $this->insert_row_tool_pk($table, $action)
+                        $this->insert_row_manag_pk($table, $action)
                         ?>
 
                     </div>
@@ -116,7 +295,7 @@ class TABLE_PK extends INPUT_PK
                     </div>
                     <div class="modal-body">
                         <?php
-                        $this->add_column_tool_pk($this->table, $action);
+                        $this->add_column_manag_pk($this->table, $action);
                         ?>
                     </div>
                     <div class="modal-footer">
@@ -130,7 +309,7 @@ class TABLE_PK extends INPUT_PK
     }
 
 
-    public function remove_column_modal_pk(string $action,string $label = 'DELETE COLUMN')
+    public function remove_column_modal_pk(string $action, string $label = 'DELETE COLUMN')
     {
 
     ?>
@@ -147,7 +326,7 @@ class TABLE_PK extends INPUT_PK
                     </div>
                     <div class="modal-body">
                         <?php
-                        $this->remove_column_tool_pk($this->table, $action);
+                        $this->remove_column_manag_pk($this->table, $action);
                         ?>
                     </div>
                     <div class="modal-footer">
@@ -160,7 +339,7 @@ class TABLE_PK extends INPUT_PK
     <?php
     }
 
-    public function move_column_modal_pk(string $action , string $label = 'MOVE COLUMN')
+    public function move_column_modal_pk(string $action, string $label = 'MOVE COLUMN')
     {
 
     ?>
@@ -177,7 +356,7 @@ class TABLE_PK extends INPUT_PK
                     </div>
                     <div class="modal-body">
                         <?php
-                        $this->move_column_tool_pk($this->table, $action);
+                        $this->move_column_manag_pk($this->table, $action);
                         ?>
                     </div>
                     <div class="modal-footer">

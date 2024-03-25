@@ -22,27 +22,24 @@
     <main>
         <div class="container-fluid text-center" style="padding: 2rem">
             <div class="row align-items-start">
-               
-                <div class="col-10" style="text-align: left; border-right: 1px solid black ; padding-left: 3rem">
+                <div class="col-10" style="text-align: left; border-right: 1px solid grey ; padding-right: 3rem ">
+                    <h1>PUNKODE Start Mode</h1>
+                    <p>require_once 'punkode/setup.php';</p>
+                    <p>inserire la stringa require sopra in ogni pagina dove intendete utilizzare il punkode ,
+                        l'indirizzo del require deve puntare alla pagina setup.php che si trova all'interno della cartella pankode</p>
+                    <p><b>BOOTSTRAP</b></p>
+                    <p>Facendo il require di setup.php all'interno di punkode avrete già a disposizione i CDN di bootstrap.
+                    </p>
 
-
-                    <a href="table.php">
-                        <h5 class="text-primary">new TABLE_PK( string 'table')</h5>
-                    </a>
+                    <p> All'interno di asset trovate comunque bootstrap installato nel caso non vogliate usare i CDN, la cartella del bootstrap verra aggiornata insieme
+                        agli aggiornamenti del punkode
+                    </p>
                     </br>
-                    <p>Stanziare la classe "new TABLE_PK" per visualizzare una tabella del database</p>
-                    <p>La tabella conterrà già tutte le possibilità per modificare aggiungere ed eliminare i vari record</p>
-                    </br></br>
 
-                    <a href="int.php">
-                        <h5 class="text-primary">input_number ( string 'label' , string 'name', array $options[] , string 'function_js')</h5>
-                    </a>
-                    </br>
-                    <p>Crea un campo di input per numeri interi con i controlli di sicurezza sanitizzazione e validazione</p>
-                    </br></br>
 
 
                 </div>
+         
                 <div class="col-2" style="text-align: right; border-right: 1px solid black ; padding-left: 3rem">
                     <h3>PARAMETER USED</h3>
                     <h5 style="color:blue"><b>$table</b> string</h5>

@@ -6,7 +6,7 @@ namespace Punkode;
 
 trait TOOL_PK
 {
-
+/* serve per settare il type column in un valore utilizzabile in punkode ad esempio varchar diventa var */
     static function set_column_type_pk($value_column_type)
     {
         switch ($value_column_type) {
@@ -26,23 +26,23 @@ trait TOOL_PK
                 return 'dat';
                 break;
 
-            case str_starts_with($value_column_type, 'tinyint') !== false:
+            case str_starts_with($value_column_type, 'tinyint') === true:
                 return 'tinyi';
                 break;
 
-            case str_starts_with($value_column_type, 'tinytext') !== false:
+            case str_starts_with($value_column_type, 'tinytext') === true:
                 return 'tinyt';
                 break;
 
-            case str_starts_with($value_column_type, 'char') !== false:
+            case str_starts_with($value_column_type, 'char') === true:
                 return 'cha';
                 break;
 
-            case str_starts_with($value_column_type, 'longtext') !== false:
+            case str_starts_with($value_column_type, 'longtext') === true:
                 return 'lon';
                 break;
 
-            case str_starts_with($value_column_type, 'json') !== false:
+            case str_starts_with($value_column_type, 'json') === true:
                 return 'json';
                 break;
 
@@ -162,4 +162,6 @@ trait TOOL_PK
                 break;
         }
     }
+
+    
 }

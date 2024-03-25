@@ -28,7 +28,7 @@ class RENDER_PK extends INPUT_PK
                     break;
 
                 case   isset($_POST['submit_delete_record_pk']) && !empty($_POST['submit_delete_record_pk']):
-                    $this->delete_record_render_pk();
+                    $this->delete_row_render_pk($table);
                     break;
 
                 case  isset($_POST['name_new_column']) && !empty($_POST['name_new_column']) && !empty($_POST['type_new_column']) && isset($_POST['name_table_pk']) && !empty($_POST['name_table_pk']):
@@ -50,20 +50,19 @@ class RENDER_PK extends INPUT_PK
         }
     }
 
-    public function render_pk(string $table, string $type_render, string $where_field, string $where_value)
+    public function render_update_pk(string $table, string $name_submit, string $where_field = '', string $where_value = '')
     {
-
-        switch ($type_render) {
-            case 'update':
-                $array_type_column=array();
-                $array_key=array();
-                $array_value=array();
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            if (isset($_POST[$name_submit]) && !empty($_POST[$name_submit])) {
+                $array_type_column = array();
+                $array_key = array();
+                $array_value = array();
                 foreach ($_POST as $key => $value) {
                     $type_column_tmp = $this->select_one_information_table_pk($table, $key);
-               
+
                     if ($type_column_tmp != NULL) {
                         $array_type_column[] = TOOL_PK::set_column_type_pk($type_column_tmp[0]['COLUMN_TYPE']);/*  prendo tutti i type_column dei valori post passati escluso il submit */
-                      
+
                         $array_key[] = $key; /* Metto in un array tutte le le chiavi del post che vengono passati escluso il submit */
                         $array_value[] = $value;
                     }
@@ -71,34 +70,9 @@ class RENDER_PK extends INPUT_PK
                 array_unshift($array_type_column, '0'); /* aggiungo un valore a caso all'inizio dell'array */
                 array_unshift($array_value, $where_value);   /*  perche il for comincia da 1 per esigenze del render preimpostato */
                 array_unshift($array_key, $where_field);
-   
+
                 $this->update_row_render_pk($table, $array_type_column, $array_key, $array_value);
-                break;
-
-                case 'insert':
-                    $array_type_column=array();
-                    $array_key=array();
-                    $array_value=array();
-                    foreach ($_POST as $key => $value) {
-                        $type_column_tmp = $this->select_one_information_table_pk($table, $key);
-                   
-                        if ($type_column_tmp != NULL) {
-                            $array_type_column[] = TOOL_PK::set_column_type_pk($type_column_tmp[0]['COLUMN_TYPE']);/*  prendo tutti i type_column dei valori post passati escluso il submit */
-                          
-                            $array_key[] = $key; /* Metto in un array tutte le le chiavi del post che vengono passati escluso il submit */
-                            $array_value[] = $value;
-                        }
-                    }
-                    array_unshift($array_type_column, '0'); /* aggiungo un valore a caso all'inizio dell'array */
-                    array_unshift($array_value, $where_value);   /*  perche il for comincia da 1 per esigenze del render preimpostato */
-                    array_unshift($array_key, $where_field);
-       
-                    $this->insert_row_render_pk($table, $array_type_column, $array_key, $array_value);
-                    break;
-
-            default:
-                # code...
-                break;
+            }
         }
     }
 
@@ -155,38 +129,65 @@ class RENDER_PK extends INPUT_PK
             if ($array_key[$i] != 'type_column') { /* type column e un campo nascosto nel form di arrivo per indentificare la tipologia della colonna */
                 $this->update_pk($table, $array_key[$i], $value_sanitiz, $array_key[0], $array_value[0]);
             }
+        }
+        
             header("Location: #");
-        }
+        
     }
 
 
-    public function insert_row_render_pk($table)
+    public function render_insert_pk(string $table, string $name_submit)
     {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            if (isset($_POST[$name_submit]) && !empty($_POST[$name_submit])) {
+                $array_type_column = array();
+                $array_key = array();
+                $array_value = array();
+                foreach ($_POST as $key => $value) {
+                    $type_column_tmp = $this->select_one_information_table_pk($table, $key);
 
-        if(isset($_POST['type_colum'])){
-        $array_type_column = explode(',', $_POST['type_column']); /* trasformo in array la stringa con la lista del tipo colonne */
+                    if ($type_column_tmp != NULL) {
+                        $array_type_column[] = TOOL_PK::set_column_type_pk($type_column_tmp[0]['COLUMN_TYPE']);/*  prendo tutti i type_column dei valori post passati escluso il submit e li setto con le prime lettere del type */
 
-        $array_key = array_keys($_POST);
-        foreach ($_POST as  $value) {
-            $array_value[] = $value;
+                        $array_key[] = $key; /* Metto in un array tutte le chiavi del post che vengono passati escluso il submit */
+                        $array_value[] = $value; /* Metto in un array tutte i valori del post che vengono passati escluso il submit */
+                    }
+                }
+
+
+                $this->insert_row_render_pk($table, $array_type_column, $array_key, $array_value);
+            }
         }
-        array_pop($array_key);/*  elimino l'ultima chiave del valore post il submit */
-        array_pop($array_value);  /* elimino l'ultimo valore del post il submit */
-        array_pop($array_key);/*  elimino l'ultima chiave del valore post lista di tipo column */
-        array_pop($array_value);  /* elimino l'ultimo valore del post lista di tipo column */
-
-        if (isset($table) && !empty($table)) {
-            array_shift($array_key); /* elimino il primo elemento dell'array che sarebbe table */
-            array_shift($array_value);
-        } else {
-            $table = $array_value[0]; /* prima setto table prendendolo dal campo nascosto e poi lo elomino dall'array */
-            array_shift($array_key); /* elimino il primo elemento dell'array che sarebbe table */
-            array_shift($array_value);
-        }
-    }else{  /* vuol dire che la richiesta arriva dal render personalizzato */
-
     }
 
+    public function insert_row_render_pk($table, array $array_type_column = array(), array $array_key = array(), array $array_value = array())
+    {
+        if (isset($_POST['type_column'])) {
+            $array_type_column = explode(',', $_POST['type_column']);
+            $array_key = array_keys($_POST);
+            foreach ($_POST as  $value) {
+                $array_value[] = $value;
+            }
+
+            array_pop($array_key);/*  elimino l'ultima chiave del valore post il submit */
+            array_pop($array_value);  /* elimino l'ultimo valore del post il submit */
+            array_pop($array_key);/*  elimino l'ultima chiave del valore post lista di tipo column */
+            array_pop($array_value);  /* elimino l'ultimo valore del post lista di tipo column */
+
+            if (isset($table) && !empty($table)) {
+                array_shift($array_key); /* elimino il primo elemento dell'array che sarebbe table */
+                array_shift($array_value);
+            } else {
+                $table = $array_value[0]; /* prima setto table prendendolo dal campo nascosto e poi lo elomino dall'array */
+                array_shift($array_key); /* elimino il primo elemento dell'array che sarebbe table */
+                array_shift($array_value);
+            }
+        } else {
+            $array_type_column = $array_type_column; /* trasformo in array la stringa con la lista del tipo colonne */
+        }
+
+
+        $array_value_sanitizie = array();
         $lenght_type_column = count($array_type_column);
         for ($i = 0; $i <  $lenght_type_column; $i++) { //prendo la lunghezza del type column e tolgo il primo valore che sarebbe l'id
             switch ($array_type_column[$i]) {
@@ -220,19 +221,40 @@ class RENDER_PK extends INPUT_PK
 
         $this->insert_pk($table, $array_key, $array_value_sanitizie);
 
+       
+            header("Location: #");
+        
+    }
 
-        header("Location: #");
+    public function render_delete_pk(string $table, string $name_submit)
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            if (isset($_POST[$name_submit]) && !empty($_POST[$name_submit])) {
+                $this->delete_row_render_pk($table);
+            }
+        }
     }
 
 
-    public function delete_record_render_pk()
+    public function delete_row_render_pk(string $table)
     {
+    
         $array_key = array_keys($_POST);
         foreach ($_POST as  $value) {
             $array_value[] = $value;
         }
-        $this->delete_pk($array_value[0], $array_key[1], $array_value[1]);
-        header("Location: #");
+        if(empty($table)){
+            $table = $array_value[0];
+            $where = $array_key[1];
+            $value = $array_value[1];
+        }else{
+            $table = $table;
+            $where = $array_value[0];
+            $value = $array_value[1];
+        }
+       
+        $this->delete_pk($table, $where, $value);
+        header("Location: #") ;
     }
 
 

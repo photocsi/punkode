@@ -4,7 +4,7 @@ namespace Punkode;
 
 require_once 'safety-trait-class.php';
 require_once 'manag_table-trait-class.php';
-class DB_PK extends SETUP_PK
+class DB_PK extends CONFIG_PK
 {
 
     private $conn = "";
