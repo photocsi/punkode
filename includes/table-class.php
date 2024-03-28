@@ -2,6 +2,19 @@
 
 namespace Punkode;
 
+/* DESCRIZIONE CLASSE */
+/* La classe table serve per creare in automatico la tabella front-end da una tabella del db
+serve per creare dei form personalizzati in maniera veloce
+e contiene il form preimpostato per la creazione di una nuova tabella nel db
+contiene inoltre i modali da cui partono l'update , l'insert e il delet dei record della tabella
+e i modali per aggiungere , eliminare o spostare una colonna della tabella nel db
+------------------------------------------------------------------------------------------------
+Le funzioni template contengono le funzioni per far partire i modali,
+ dai modali partono le funzioni della classe manage_table che creano il form (utilizzando la classe input) per le varie modifiche
+ dalle funzioni della classe manage_table tramite il form e la richiesta http si passa alla classe render
+ la classe render prende tutti i dati post è li invia alla classe db che esegue tutte le query... 
+ in mezzo si utilizza la classe safety per la sanificazione e validazione dei dati  */ 
+
 require_once PKDIR . '/includes/input-class.php';
 class TABLE_PK extends INPUT_PK
 {
@@ -19,8 +32,8 @@ class TABLE_PK extends INPUT_PK
     public function template_create_table_pk(string $action = '#')
     {
         $this->form_pk($action, 4);
-        $this->text_pk('Name Table', 'table_name_new_table', '', 'pattern="^[a-z A-Z]+$" REQUIRED', array('s', 12));
-        $this->text_pk('Name id', 'id_name_new_table', '', 'REQUIRED', array('s', 12));
+        $this->text_pk('Name Table', 'table_name_new_table', 'pattern="^[a-z A-Z]+$" REQUIRED', array('s', 12));
+        $this->text_pk('Name id', 'id_name_new_table', 'REQUIRED', array('s', 12));
         $this->submit_pk('Create', 'submit_create_new_table', array('s', 'primary', 12));
         $this->end_form_pk();
     }
@@ -95,71 +108,80 @@ class TABLE_PK extends INPUT_PK
                             for ($r = 0; $r < $number_row; $r++) {
                                 echo '<tr>';
                                 if ($element === 'all' || $element === 'edit') { /* la scelta per inserire il pulsante edit oppure no */
-                                    echo '<td>';
-                                    $this->update_modal_pk($table, $action, $select_all[$r][0], 'Edit');
-                                    echo '</td>';
-                                }
-
-                                for ($i = 0; $i < $length_select_all; $i++) {
-                                    switch ($this->info_schema[$i]['COLUMN_TYPE']) {
-                                        case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 3) === 'int' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude):
-                                            $validate = $this->validate_int_pk($select_all[$r][$i]);
-                                            echo " <td>$validate</td>";
-                                            break;
-
-                                        case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 3) === 'var' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude):
-                                            $validate = $this->validate_var_pk($select_all[$r][$i]);
-                                            echo "<td> $validate </td>";
-                                            break;
-
-                                        case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 3) === 'tex' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude):
-                                            $validate = $this->validate_var_pk($select_all[$r][$i]);
-                                            echo " <td> $validate</td>";
-                                            break;
-
-                                        case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 3) === 'cha' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude):  /*  per la password */
-                                            $validate = $this->validate_pass_pk($select_all[$r][$i]);
-                                            echo " <td> $validate </td>";
-                                            break;
-
-                                        case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 5) === 'tinyt' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude): /*  valore email */
-                                            if ($this->validate_email_pk($select_all[$r][$i])) {
-                                                $validate = $this->validate_email_pk($select_all[$r][$i]);
-                                                echo "<td>$validate</td>";
-                                            } else {
-                                                echo "<td>E-mail non valida</td>";
-                                            }
-                                            break;
-
-                                        case $this->info_schema[$i]['COLUMN_TYPE'] == 'tinyint(1)' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude):  /*  valore booleano */
-                                            ($select_all[$r][$i] === 1) ? $value_check = 'X' : $value_check = 'O';
-                                            echo " <td> $value_check </td>";
-                                            break;
-
-                                        case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 5) == 'tinyi' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude):
-                                            $validate = $this->validate_int_pk($select_all[$r][$i]);
-                                            echo " <td>$validate</td>";
-                                            echo " <td> {$this->select_all[$r][$i]}</td>";
-                                            break;
-
-                                        case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 3) == 'dat' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude): /* VALORE DATA */
-                                            $validate = $this->validate_date_pk($select_all[$r][$i]);
-                                            echo " <td> $validate </td>";
-                                            break;
-
-                                        case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 3) == 'lon' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude):
-                                            $validate = $this->validate_var_pk($select_all[$r][$i]);
-                                            echo " <td> $validate</td>";
-                                            break;
+                            ?><td>
+                                        <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                                        <?php $this->update_modal_pk($table, $action, $select_all[$r][0], 'Edit');
+                                        $this->delete_modal_pk($table, $action, $select_all[$r][0], 'Delete');
+                                        echo '</div></td>';
                                     }
-                                }
-                            ?>
-                                </tr>
 
-                            <?php  }
-                            unset($length_select_all);
-                            unset($number_row);
-                            ?>
+                                    for ($i = 0; $i < $length_select_all; $i++) {
+                                        switch ($this->info_schema[$i]['COLUMN_TYPE']) {
+                                            case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 3) === 'int' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude):
+                                                $validate = $this->validate_int_pk($select_all[$r][$i]);
+                                                echo " <td>$validate</td>";
+                                                break;
+
+                                            case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 3) === 'var' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude):
+                                                $validate = $this->validate_var_pk($select_all[$r][$i]);
+                                                echo "<td> $validate </td>";
+                                                break;
+
+                                            case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 9) === 'char(255)' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude):  /*  per la password */
+                                                $validate = $this->validate_pass_pk($select_all[$r][$i]);
+                                                echo " <td> $validate </td>";
+                                                break;
+
+                                            case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 3) === 'cha' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude):  /*  per char */
+                                                $validate = $this->validate_var_pk($select_all[$r][$i]);
+                                                echo " <td> $validate </td>";
+                                                break;
+
+                                            case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 3) === 'tex' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude):
+                                                $validate = $this->validate_var_pk($select_all[$r][$i]);
+                                                echo " <td> $validate</td>";
+                                                break;
+
+
+
+                                            case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 5) === 'tinyt' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude): /*  valore email */
+                                                if ($this->validate_email_pk($select_all[$r][$i])) {
+                                                    $validate = $this->validate_email_pk($select_all[$r][$i]);
+                                                    echo "<td>$validate</td>";
+                                                } else {
+                                                    echo "<td>E-mail non valida</td>";
+                                                }
+                                                break;
+
+                                            case $this->info_schema[$i]['COLUMN_TYPE'] == 'tinyint(1)' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude):  /*  valore booleano */
+                                                ($select_all[$r][$i] === 1) ? $value_check = 'X' : $value_check = 'O';
+                                                echo " <td> $value_check </td>";
+                                                break;
+
+                                            case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 5) == 'tinyi' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude):
+                                                $validate = $this->validate_int_pk($select_all[$r][$i]);
+                                                echo " <td>$validate</td>";
+                                                echo " <td> {$this->select_all[$r][$i]}</td>";
+                                                break;
+
+                                            case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 3) == 'dat' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude): /* VALORE DATA */
+                                                $validate = $this->validate_date_pk($select_all[$r][$i]);
+                                                echo " <td> $validate </td>";
+                                                break;
+
+                                            case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 3) == 'lon' && !in_array($this->info_schema[$i]['COLUMN_NAME'], $exclude):
+                                                $validate = $this->validate_var_pk($select_all[$r][$i]);
+                                                echo " <td> $validate</td>";
+                                                break;
+                                        }
+                                    }
+                                        ?>
+                                        </tr>
+
+                                    <?php  }
+                                unset($length_select_all);
+                                unset($number_row);
+                                    ?>
 
                         </tbody>
                     </table>
@@ -170,68 +192,119 @@ class TABLE_PK extends INPUT_PK
     <?php
 
     }
-    
- /*    creo una form automaticamente solo indicando la tebella e i campi da visualizzare */
-    public function form_custom_pk(string $table, array $fields, array $option=array('action'=>'#','style'=>3))
+
+    /*    creo una form automaticamente solo indicando la tebella e i campi da visualizzare */
+    public function form_custom_pk(string $table, string $where, string $value, array $fields, array $option = array('#', 3, 'm', 12))
     {
-        
 
-        $this->form_pk($option['action'],$option['style']);
+
+        $this->form_pk($option[0], $option[1]);
+        /* i primi 2 input servono sempre per i render preimpostati */
+        echo " <input name='name_update_table_pk'  type='TEXT' value=$table hidden> "; /* serve per avere il primo campo da utilizzare per il render automatico */
+        echo " <input name=$where  type='TEXT' value=$value hidden> ";
+        $array_type_column[] = 'var';
         foreach ($fields as $field) {
+            if (is_string($field)) {
+                $tmp = $this->select_one_information_table_pk($table, $field);
+                $type = TOOL_PK::set_column_type_pk($tmp[0]['COLUMN_TYPE']);
+                $field_friendly = str_replace('_', ' ', $field);
+                switch ($type) {
+                    case 'int':
+                        $this->int_pk($field_friendly, $field, '', array($option[2], $option[3]));
+                        $array_type_column[] = 'int'; /* questo serve come valore per il render personalizzato, non conta in effetti il valore in se ma solo il numero dell'array */
+                        break;
 
-            $tmp = $this->select_one_information_table_pk($table, $field);
-            $type = TOOL_PK::set_column_type_pk($tmp[0]['COLUMN_TYPE']);
-            switch ($type) {
-                case 'var':
-                case 'cha':
-                case 'text':
-                    $this->text_pk($field, $field);
-                    break;
-                case 'int':
-                    $this->int_pk($field, $field);
-                    break;
-                case 'lon':
-                    $this->longText_pk($field, $field);
-                    break;
-                case 'dat':
-                    $this->date_pk($field, $field);
-                    break;
+                    case 'var':
+                    case 'cha':
+                    case 'text':
+                        $this->text_pk($field_friendly, $field, '', array($option[2], $option[3]));
+                        $array_type_column[] = 'var'; /* questo serve come valore per il render personalizzato, non conta in effetti il valore in se ma solo il numero dell'array */
+                        break;
+
+                    case 'char(255)':
+                        $this->password_pk($field_friendly, $field, '', array($option[2], $option[3]));
+                        $array_type_column[] = 'char(255)'; /* questo serve come valore per il render personalizzato, non conta in effetti il valore in se ma solo il numero dell'array */
+                        break;
+
+                    case 'lon':
+                        $this->longText_pk($field_friendly, $field, '', array($option[2], $option[3]));
+                        $array_type_column[] = 'lon'; /* questo serve come valore per il render personalizzato, non conta in effetti il valore in se ma solo il numero dell'array */
+                        break;
+                        
+                    case 'dat':
+                        $this->date_pk($field_friendly, $field, '', array($option[2], $option[3]));
+                        $array_type_column[] = 'dat'; /* questo serve come valore per il render personalizzato, non conta in effetti il valore in se ma solo il numero dell'array */
+                        break;
+                }
+            } else {
+
+                $label = str_replace('_', ' ', $field[0]);
+                array_shift($field);
+                $this->option_pk($label, $label, $field, '', array($option[2], $option[3]));
             }
         }
-        $this->submit_pk('Salva', 'submit_save');
+        $string_type_column = implode(',', $array_type_column);
+        echo " <input  type='text' name='type_column' value='$string_type_column' hidden> ";
+        $this->submit_pk('Salva', 'submit_edit_record_pk');
         $this->end_form_pk();
     }
 
-public function form_custom_val_pk(string $table,string $where,string $value, array $fields, array $option=array('action'=>'#','style'=>3)){
+    public function form_custom_val_pk(string $table, string $where, string $value, array $fields, array $option = array('#', 3, 'm', 12))
+    {
 
-    $this->form_pk($option['action'],$option['style']);
+        $this->form_pk($option[0], $option[1]);
+        /* i primi 2 input servono sempre per i render preimpostati */
+        echo " <input name='name_update_table_pk'  type='TEXT' value=$table hidden> "; /* serve per avere il primo campo da utilizzare per il render automatico */
+        echo " <input name=$where  type='TEXT' value=$value hidden> ";
+        $array_type_column[] = 'var';
+        foreach ($fields as $field) {
+            if (is_string($field)) {
+                $tmp = $this->select_one_information_table_pk($table, $field);
+                $type = TOOL_PK::set_column_type_pk($tmp[0]['COLUMN_TYPE']);
+                $field_friendly = str_replace('_', ' ', $field);
+                switch ($type) {
+                    case 'int':
+                        $this->int_val_pk($table, $where, $value, $field_friendly, $field, '', array($option[2], $option[3]));
+                        $array_type_column[] = 'int'; /* questo serve come valore per il render personalizzato, non conta in effetti il valore in se ma solo il numero dell'array */
+                        break;
 
-    foreach ($fields as $field) {
+                    case 'var':
+                    case 'cha':
+                    case 'text':
+                        $this->text_val_pk($table, $where, $value, $field_friendly, $field, '', array($option[2], $option[3]));
+                        $array_type_column[] = 'var'; /* questo serve come valore per il render personalizzato, non conta in effetti il valore in se ma solo il numero dell'array */
+                        break;
 
-        $tmp = $this->select_one_information_table_pk($table, $field);
-        $type = TOOL_PK::set_column_type_pk($tmp[0]['COLUMN_TYPE']);
-        switch ($type) {
-            case 'var':
-            case 'cha':
-            case 'text':
-                $this->text_val_pk($table, $where, $value,$field, $field);
-                break;
-            case 'int':
-                $this->int_val_pk($table, $where, $value,$field, $field);
-                break;
-            case 'lon':
-                $this->longText_val_pk($table, $where, $value,$field, $field);
-                break;
-            case 'dat':
-                $this->date_val_pk($table, $where, $value,$field, $field);
-                break;
+                    case 'char(255)':
+                        $this->password_val_pk($table, $where, $value, $field_friendly, $field, '', array($option[2], $option[3]));
+                        $array_type_column[] = 'char(255)'; /* questo serve come valore per il render personalizzato, non conta in effetti il valore in se ma solo il numero dell'array */
+                        break;
+
+                    case 'lon':
+                        $this->longText_val_pk($table, $where, $value, $field_friendly, $field, '', array($option[2], $option[3]));
+                        $array_type_column[] = 'lon';  /* questo serve come valore per il render personalizzato, non conta in effetti il valore in se ma solo il numero dell'array */
+                        break;
+
+                    case 'dat':
+                        $this->date_val_pk($table, $where, $value, $field_friendly, $field, '', array($option[2], $option[3]));
+                        $array_type_column[] = 'dat'; /* questo serve come valore per il render personalizzato, non conta in effetti il valore in se ma solo il numero dell'array */
+                        break;
+                }
+            } else {
+
+                $label = str_replace('_', ' ', $field[0]);
+                array_shift($field);
+                $this->option_val_pk($table, $where, $value, $label, $label, $field, '', array($option[2], $option[3]));
+                $array_type_column[] = 'opt';
+            }
         }
+
+        $string_type_column = implode(',', $array_type_column);
+        echo " <input  type='text' name='type_column' value='$string_type_column' hidden> ";
+        $this->submit_pk('Salva', 'submit_edit_record_pk');
+        $this->end_form_pk();
     }
-    $this->submit_pk('Salva', 'submit_val_save');
-    $this->end_form_pk();
 
-
-}
     public function update_modal_pk(string $table, string $action, int $id, string $label = 'Edit')
     {
 
@@ -248,16 +321,11 @@ public function form_custom_val_pk(string $table,string $where,string $value, ar
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-
                         <?php
                         $this->update_row_manag_pk($table, $action, $id);
-
                         ?>
-
                     </div>
                     <div class="modal-footer">
-
-
                     </div>
                 </div>
             </div>
@@ -289,6 +357,44 @@ public function form_custom_val_pk(string $table,string $where,string $value, ar
 
                         <?php
                         $this->insert_row_manag_pk($table, $action)
+                        ?>
+
+                    </div>
+                    <div class="modal-footer">
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        </form>
+
+
+    <?php
+
+
+    }
+
+    public function delete_modal_pk(string $table, string $action, int $id, string $label = 'Delete')
+    {
+
+    ?>
+        <!-- Button trigger modal -->
+        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModalDelete<?php echo $id  ?>"><?php echo $label; ?> </button>
+
+        <!-- Modal -->
+        <div class="modal fade" id="exampleModalDelete<?php echo $id  ?>" data-bs-keyboard="false" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="exampleModalLabel"><?php echo "ID $id - Table $table"; ?></h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <h5>Conferma cancellazione riga</h5>
+                        <?php
+                        $this->delete_row_manag_pk($table, $action, $id);
+
                         ?>
 
                     </div>

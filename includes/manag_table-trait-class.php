@@ -24,7 +24,7 @@ trait MANAG_TABLE_PK
             switch ($this->info_schema[$i]['COLUMN_TYPE']) {
                 case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 3) == 'int':   /*controllo se la stringa column_type comincia con int e quindi e un numero*/
                     $this->int_val_pk(
-                        $this->info_schema[0]['TABLE_NAME'],  /* nome tabella */
+                        $table,  /* nome tabella */
                         $this->info_schema[0]['COLUMN_NAME'], /* nome della prima colonna che contiene l'id */
                         $id,                                  /* id del record */
                         $column_name_replace,                 /* label - nome colonna senza trattino */
@@ -48,18 +48,31 @@ trait MANAG_TABLE_PK
                     $array_type_column[] = 'var';
                     break;
 
-                case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 3) == 'cha':   /*controllo se la stringa column_type comincia con int e quindi e un numero*/
-                    $this->password_val_pk(
-                        $this->info_schema[0]['TABLE_NAME'],  /* nome tabella */
-                        $this->info_schema[0]['COLUMN_NAME'], /* nome della prima colonna che contiene l'id */
-                        $id,                                  /* id del record */
-                        $column_name_replace,                 /* label - nome colonna senza trattino */
-                        $this->info_schema[$i]['COLUMN_NAME'], /* name - nome colonna con trattini */
-                        '',
-                        array('s')
-                    );
-                    $array_type_column[] = 'cha';
-                    break;
+                    case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 9) == 'char(255)':   /*controllo se la stringa column_type comincia con char(255) e quindi e una password*/
+                        $this->password_val_pk(
+                            $this->info_schema[0]['TABLE_NAME'],  /* nome tabella */
+                            $this->info_schema[0]['COLUMN_NAME'], /* nome della prima colonna che contiene l'id */
+                            $id,                                  /* id del record */
+                            $column_name_replace,                 /* label - nome colonna senza trattino */
+                            $this->info_schema[$i]['COLUMN_NAME'], /* name - nome colonna con trattini */
+                            '',
+                            array('s')
+                        );
+                        $array_type_column[] = 'char(255)';
+                        break;
+
+                    case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 3) == 'cha':   /*controllo se la stringa column_type comincia con cha e quindi e char*/
+                        $this->text_val_pk(
+                            $this->info_schema[0]['TABLE_NAME'],  /* nome tabella */
+                            $this->info_schema[0]['COLUMN_NAME'], /* nome della prima colonna che contiene l'id */
+                            $id,                                  /* id del record */
+                            $column_name_replace,                 /* label - nome colonna senza trattino */
+                            $this->info_schema[$i]['COLUMN_NAME'], /* name - nome colonna con trattini */
+                            '',
+                            array('s')
+                        );
+                        $array_type_column[] = 'cha';
+                        break;
 
                 case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 3) == 'tex':   /*controllo se la stringa column_type comincia con int e quindi e un numero*/
                     $this->text_val_pk(
@@ -141,8 +154,6 @@ trait MANAG_TABLE_PK
         $string_type_column = implode(',', $array_type_column);
         echo " <input  type='text' name='type_column' value='$string_type_column' hidden> ";
 
-        $this->submit_pk('Delete', 'submit_delete_record_pk', array('s', 'danger'));
-
         $this->submit_pk('Save', 'submit_edit_record_pk', array('s', 'primary'));
         $this->end_form_pk();
     }
@@ -174,21 +185,30 @@ trait MANAG_TABLE_PK
                         $column_name_replace,                 /* label - nome colonna senza trattino */
                         $this->info_schema[$i]['COLUMN_NAME'], /* name - nome colonna con trattini */
                         '',
-                        '',
                         array('s', 12)
                     );
                     $array_type_column[] = 'var';
                     break;
 
-                case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 3) == 'cha':   /*controllo se la stringa column_type comincia con int e quindi e un numero*/
-                    $this->password_pk(
-                        $column_name_replace,                 /* label - nome colonna senza trattino */
-                        $this->info_schema[$i]['COLUMN_NAME'], /* name - nome colonna con trattini */
-                        '',
-                        array('s')
-                    );
-                    $array_type_column[] = 'cha';
-                    break;
+                    case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 9) == 'char(255)':   /*controllo se la stringa column_type comincia con char(255) e quindi e una password*/
+                        $this->password_pk(
+                            $column_name_replace,                 /* label - nome colonna senza trattino */
+                            $this->info_schema[$i]['COLUMN_NAME'], /* name - nome colonna con trattini */
+                            '',
+                            array('s')
+                        );
+                        $array_type_column[] = 'char(255)';
+                        break;
+
+                    case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 3) == 'cha':   /*controllo se la stringa column_type comincia con cha e quindi e char a lunghezza fissa*/
+                        $this->text_pk(
+                            $column_name_replace,                 /* label - nome colonna senza trattino */
+                            $this->info_schema[$i]['COLUMN_NAME'], /* name - nome colonna con trattini */
+                            '',
+                            array('s')
+                        );
+                        $array_type_column[] = 'cha';
+                        break;
 
                 case substr($this->info_schema[$i]['COLUMN_TYPE'], 0, 3) == 'tex':   /*controllo se la stringa column_type comincia con int e quindi e un numero*/
                     $this->text_pk(
@@ -257,6 +277,18 @@ trait MANAG_TABLE_PK
         $this->end_form_pk();
     }
 
+    public function delete_row_manag_pk(string $table, string $action='#', int $id)
+    {  /* crea tutti gli input presi dalla tabella del db */
+        $this->form_pk($action, 4);
+        echo " <input name='name_delete_table_pk'  type='TEXT' value=$table hidden> ";
+        echo " <input name='{$this->info_schema[0]['COLUMN_NAME']}'  type='number' value=$id hidden> ";
+
+      
+        $this->submit_pk('Delete', 'submit_delete_record_pk', array('s', 'danger'));
+        $this->end_form_pk();
+    }
+
+
     public function add_column_manag_pk(string $table, string $action = '#')
     {
 
@@ -265,7 +297,6 @@ trait MANAG_TABLE_PK
         $this->text_pk(
             'Nome',
             'name_new_column',
-            '',
             'pattern="^[a-z _ A-Z]+$" REQUIRED',
             array('s', 12)
         );
@@ -273,7 +304,7 @@ trait MANAG_TABLE_PK
         $this->option_pk(
             'Tipo',
             'type_new_column',
-            array('TEXT (varchar)', 'LONGTEXT', 'NUMBER (int)', 'EMAIL (tinytext)', 'DATE', 'PASSWORD', 'BOOLEAN'),
+            array('TEXT (varchar)','TEXT (char dimensioni fisse)', 'LONGTEXT', 'NUMBER (int)', 'EMAIL (tinytext)', 'DATE', 'PASSWORD', 'BOOLEAN'),
             'REQUIRED',
             array('s', 12)
         );

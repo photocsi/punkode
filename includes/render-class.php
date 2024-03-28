@@ -19,18 +19,18 @@ class RENDER_PK extends INPUT_PK
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             switch ($_POST) {
-                case isset($_POST['submit_edit_record_pk']) && isset($_POST['name_update_table_pk']) && !empty($_POST['name_update_table_pk']):
+                case isset($_POST['submit_edit_record_pk']) && $_POST['submit_edit_record_pk'] === '1' && isset($_POST['name_update_table_pk']) && !empty($_POST['name_update_table_pk']):
                     $this->update_row_render_pk($table);
                     break;
 
-                case isset($_POST['submit_insert_record_pk']) && isset($_POST['name_insert_table_pk']) && !empty($_POST['name_insert_table_pk']):
+                case isset($_POST['submit_insert_record_pk']) && $_POST['submit_insert_record_pk'] === '1' && isset($_POST['name_insert_table_pk']) && !empty($_POST['name_insert_table_pk']):
                     $this->insert_row_render_pk($table);
                     break;
 
-                case   isset($_POST['submit_delete_record_pk']) && !empty($_POST['submit_delete_record_pk']):
+                case   isset($_POST['submit_delete_record_pk']) && !empty($_POST['submit_delete_record_pk']) && isset($_POST['name_delete_table_pk']) && !empty($_POST['name_delete_table_pk']):
                     $this->delete_row_render_pk($table);
                     break;
-
+                    /* controllare gli isset da qui */
                 case  isset($_POST['name_new_column']) && !empty($_POST['name_new_column']) && !empty($_POST['type_new_column']) && isset($_POST['name_table_pk']) && !empty($_POST['name_table_pk']):
                     $this->add_column_render_pk($table);
                     break;
@@ -86,16 +86,17 @@ class RENDER_PK extends INPUT_PK
                 $array_value[] = $value;
             }
             if (isset($table) && !empty($table)) { /* se table è stato inserito come parametro nella funzione lo utilizza */
-            } else {    /* altrimenti vuol dire che table non è stato specificato come parametro e prende quello di default cioe '' vuoto, quindi prendiamo il primo post che abbiamo dovuto inserire nel form di provenienza */
-                $table = $array_value[0];
-                array_shift($array_key); /* tolgo il primo elemento dell'array  */
-                array_shift($array_value); /* tolgo il primo elemento dell'array  */
+                /* altrimenti vuol dire che table non è stato specificato come parametro e prende quello di default cioe '' vuoto,
+                   quindi prendiamo il primo post che abbiamo dovuto inserire nel form di provenienza, quindi l'else e per i render preimpostati */
+            } else {
+                $table = $array_value[0]; /* Questo valore corrisponde a name_update_table_pk che sarebbe il nome della tabella */
+                array_shift($array_key); /* tolgo il primo elemento dell'array cioè il nome tabella  */
+                array_shift($array_value); /* tolgo il primo elemento dell'array cioè il nome tabella */
             }
         } else { /*  altrimenti significa che arriva dal render personalizzato */
             $array_key = $array_key;
             $array_type_column = $array_type;
         }
-
 
         $lenght_type_column = count($array_type_column);
         for ($i = 1; $i <  $lenght_type_column; $i++) { //prendo la lunghezza del type column e tolgo il primo valore che sarebbe l'id
@@ -106,9 +107,15 @@ class RENDER_PK extends INPUT_PK
                 case 'var':
                     $value_sanitiz = $this->sanitize_var_pk($array_value[$i]);
                     break;
-                case 'cha':
+
+                case 'char(255)':
                     $value_sanitiz = $this->sanitize_pass_pk($array_value[$i]);
                     break;
+
+                case 'cha':
+                    $value_sanitiz = $this->sanitize_cha_pk($array_value[$i]);
+                    break;
+
                 case 'tex':
                     $value_sanitiz = $this->sanitize_var_pk($array_value[$i]);
                     break;
@@ -130,9 +137,8 @@ class RENDER_PK extends INPUT_PK
                 $this->update_pk($table, $array_key[$i], $value_sanitiz, $array_key[0], $array_value[0]);
             }
         }
-        
-            header("Location: #");
-        
+
+        header("Location: #");
     }
 
 
@@ -197,9 +203,15 @@ class RENDER_PK extends INPUT_PK
                 case 'var':
                     $value_sanitiz = $this->sanitize_var_pk($array_value[$i]);
                     break;
-                case 'cha':
+
+                case 'char(255)':
                     $value_sanitiz = $this->sanitize_pass_pk($array_value[$i]);
                     break;
+
+                case 'cha':
+                    $value_sanitiz = $this->sanitize_cha_pk($array_value[$i]);
+                    break;
+
                 case 'tex':
                     $value_sanitiz = $this->sanitize_var_pk($array_value[$i]);
                     break;
@@ -221,9 +233,8 @@ class RENDER_PK extends INPUT_PK
 
         $this->insert_pk($table, $array_key, $array_value_sanitizie);
 
-       
-            header("Location: #");
-        
+
+        header("Location: #");
     }
 
     public function render_delete_pk(string $table, string $name_submit)
@@ -238,23 +249,23 @@ class RENDER_PK extends INPUT_PK
 
     public function delete_row_render_pk(string $table)
     {
-    
+
         $array_key = array_keys($_POST);
         foreach ($_POST as  $value) {
             $array_value[] = $value;
         }
-        if(empty($table)){
+        if (empty($table)) {
             $table = $array_value[0];
             $where = $array_key[1];
             $value = $array_value[1];
-        }else{
+        } else {
             $table = $table;
             $where = $array_value[0];
             $value = $array_value[1];
         }
-       
+
         $this->delete_pk($table, $where, $value);
-        header("Location: #") ;
+        header("Location: #");
     }
 
 

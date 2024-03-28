@@ -284,6 +284,28 @@ class DB_PK extends CONFIG_PK
             }
         }
 
+         /*  CONTROLLO DI TUTTI I CAMPI SE SI SCEGLIE VARCHAR */
+         if ($type_sanitized === 'TEXT (char dimensioni fisse)') {
+            $type_sanitized = 'CHAR';
+            if ($attr_sanitized === 'COMPRESSED=zlib') {
+                $attr_sanitized = 'COMPRESSED=zlib';
+            } else {
+                $attr_sanitized = '';
+            }
+
+            if ($length_sanitized === '') {
+                $length_sanitized = '(40)';
+            } else {
+                $length_sanitized = '(' . $length_sanitized . ')';
+            }
+
+            if ($predefinito_sanitized == 'CURRENT_TIMESTAMP') {
+                $predefinito_sanitized = '';
+            } elseif ($predefinito_sanitized == 'NULL') {
+                $predefinito_sanitized = 'DEFAULT NULL';
+            }
+        }
+
         /*  SE SI SCEGLIE TINYTEXT */
         if ($type_sanitized === 'EMAIL (tinytext)') {
             $type_sanitized = 'TINYTEXT';
