@@ -1,0 +1,19 @@
+NoFutureFrame (NFF) – Images Module
+=================================
+EN:
+- Standalone:
+    require_once __DIR__ . '/nofutureframe/autoload.php';
+- Inside Anarkode only:
+    require_once __DIR__ . '/../autoload.php';
+- Inside full PUNKODE:
+    require_once __DIR__ . '/../../autoload.php';
+
+IT:
+- Standalone:
+    require_once __DIR__ . '/nofutureframe/autoload.php';
+- Solo Anarkode:
+    require_once __DIR__ . '/../autoload.php';
+- Dentro PUNKODE:
+    require_once __DIR__ . '/../../autoload.php';
+
+WP-free: remove src/Environments/PhpLaravel/ and set PK_ENV='wp'.

@@ -1,0 +1,16 @@
+{
+  "name": "tuo-nome/nofutureframe",
+  "description": "NoFutureFrame (NFF) images module – standalone or inside Anarkode/PUNKODE",
+  "type": "library",
+  "autoload": {
+    "psr-4": {
+      "Punkode\\Anarkode\\NoFutureFrame\\": "src/"
+    },
+    "files": [
+      "helpers.php"
+    ]
+  },
+  "require": {
+    "php": ">=8.0"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "tuo-nome/punkode",
+  "description": "PUNKODE meta-framework (includes Anarkode/NoFutureFrame)",
+  "type": "library",
+  "autoload": {
+    "psr-4": {
+      "Punkode\\Anarkode\\NoFutureFrame\\": "anarkode/nofutureframe/src/"
+    },
+    "files": [
+      "anarkode/nofutureframe/helpers.php"
+    ]
+  },
+  "require": {
+    "php": ">=8.0"
+  }
+}

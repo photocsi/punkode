@@ -1,0 +1,16 @@
+{
+  "name": "tuo-nome/punkode-anarkode",
+  "description": "Anarkode container (images/db/etc). Includes NoFutureFrame (NFF).",
+  "type": "library",
+  "autoload": {
+    "psr-4": {
+      "Punkode\\Anarkode\\NoFutureFrame\\": "nofutureframe/src/"
+    },
+    "files": [
+      "nofutureframe/helpers.php"
+    ]
+  },
+  "require": {
+    "php": ">=8.0"
+  }
+}
