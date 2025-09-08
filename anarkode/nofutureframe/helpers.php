@@ -12,8 +12,8 @@
 |--------------------------------------------------------------------------
 */
 
-use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_ImageServiceInterface;
-use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_LogServiceInterface;
+use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_ResizeInterface;
+use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_LogInterface;
 
 /**********************************************************************
  * ENVIRONMENT CONSTANT
@@ -44,11 +44,11 @@ if (!defined('PUNK_ENV')) {
  *       - Altrimenti → eccezione
  **********************************************************************/
 if (!function_exists('punk_env_image_service')) {
-    function punk_env_image_service(?string $disk = null): PUNK_ImageServiceInterface
+    function punk_env_image_service(?string $disk = null): PUNK_ResizeInterface
     {
         // WordPress
         if (PUNK_ENV === 'wp') {
-            return new Punkode\Anarkode\NoFutureFrame\Environments\wp\PUNK_Image_Wp();
+            return new Punkode\Anarkode\NoFutureFrame\Environments\wp\PUNK_ResizeWp();
         }
 
         // Percorso environment PHP/Laravel
@@ -56,11 +56,11 @@ if (!function_exists('punk_env_image_service')) {
         if (is_dir($extra)) {
             // Laravel (con Facade disponibile): passa il disco (local/public/s3)
             if (PUNK_ENV === 'laravel' && class_exists('Illuminate\\Support\\Facades\\Storage')) {
-                return new Punkode\Anarkode\NoFutureFrame\Environments\PhpLaravel\PUNK_Image_Laravel($disk);
+                return new Punkode\Anarkode\NoFutureFrame\Environments\PhpLaravel\PUNK_ResizeLaravel($disk);
             }
             // PHP puro
             if (PUNK_ENV === 'php') {
-                return new Punkode\Anarkode\NoFutureFrame\Environments\PhpLaravel\PUNK_Image_Php();
+                return new Punkode\Anarkode\NoFutureFrame\Environments\PhpLaravel\PUNK_ResizePhp();
             }
         }
 
@@ -83,21 +83,21 @@ if (!function_exists('punk_env_image_service')) {
  *       - Altrimenti → logger nullo (non fa nulla)
  **********************************************************************/
 if (!function_exists('punk_env_log_service')) {
-    function punk_env_log_service(): PUNK_LogServiceInterface
+    function punk_env_log_service(): PUNK_LogInterface
     {
         // WordPress
         if (PUNK_ENV === 'wp') {
-            return new Punkode\Anarkode\NoFutureFrame\Environments\wp\PUNK_Log_Wp();
+            return new Punkode\Anarkode\NoFutureFrame\Environments\wp\PUNK_LogWp();
         }
 
         // PHP/Laravel
         $extra = __DIR__ . '/src/environments/phplaravel';
         if (is_dir($extra)) {
-            return new Punkode\Anarkode\NoFutureFrame\Environments\PhpLaravel\PUNK_Log_Php();
+            return new Punkode\Anarkode\NoFutureFrame\Environments\PhpLaravel\PUNK_LogPhp();
         }
 
         // Fallback: logger nullo
-        return new class implements PUNK_LogServiceInterface {
+        return new class implements PUNK_LogInterface {
             public function punk_log(string $message, string $level = 'info'): void
             {
                 // EN: Silent fallback.
@@ -129,7 +129,7 @@ if (!function_exists('punk_resize')) {
         int $quality = 90,
         ?string $disk = null
     ): array|false {
-        return punk_env_image_service($disk)->punk_resizeTo($src, $dest, $w, $h, $quality);
+        return punk_env_image_service($disk)->punk_resize_to($src, $dest, $w, $h, $quality);
     }
 }
 

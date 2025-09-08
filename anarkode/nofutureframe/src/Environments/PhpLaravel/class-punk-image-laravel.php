@@ -14,10 +14,10 @@
 
 namespace Punkode\Anarkode\NoFutureFrame\Environments\PhpLaravel;
 
-use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_ImageServiceInterface;
+use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_ResizeInterface;
 use Illuminate\Support\Facades\Storage;
 
-class PUNK_Image_Laravel implements PUNK_ImageServiceInterface
+class PUNK_ResizeLaravel implements PUNK_ResizeInterface
 {
     /******************************************************************
      * EN: Target disk name (e.g., 'local', 'public', 's3'). If null,

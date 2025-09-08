@@ -8,7 +8,7 @@
 
 namespace Punkode\Anarkode\NoFutureFrame\Environments\wp;
 
-class PUNK_Image_Wp_IO
+class PUNK_ResizeWp
 {
     public function punk_analyzeInput($input): array
     {

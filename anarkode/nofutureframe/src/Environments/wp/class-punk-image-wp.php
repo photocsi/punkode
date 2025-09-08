@@ -8,10 +8,10 @@
 
 namespace Punkode\Anarkode\NoFutureFrame\Environments\wp;
 
-use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_ImageServiceInterface;
+use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_ResizeInterFace;
 use Punkode\Anarkode\NoFutureFrame\Core\PUNK_ResizeLogic;
 
-class PUNK_Image_Wp implements PUNK_ImageServiceInterface
+class PUNK_ResizeWp implements PUNK_ResizeInterFace
 {
     public function punk_resizeTo(string $src, string $dest, int $w, int $h, int $quality = 90): array|false
     {

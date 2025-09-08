@@ -19,7 +19,7 @@ namespace Punkode\Anarkode\NoFutureFrame\Contracts;
  * EN: Defines the mandatory method for logging messages.
  * IT: Definisce il metodo obbligatorio per loggare messaggi.
  **********************************************************************/
-interface PUNK_LogServiceInterface
+interface PUNK_LogInterface
 {
     /******************************************************************
      * METHOD: punk_log()

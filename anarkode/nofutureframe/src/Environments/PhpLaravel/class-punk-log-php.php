@@ -14,14 +14,14 @@
 
 namespace Punkode\Anarkode\NoFutureFrame\Environments\PhpLaravel;
 
-use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_LogServiceInterface;
+use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_LogInterface;
 
 /**********************************************************************
  * CLASS: PUNK_Log_Php
  * EN: Minimalistic file logger implementation of PUNK_LogServiceInterface.
  * IT: Implementazione minimalista di logger su file, conforme a PUNK_LogServiceInterface.
  **********************************************************************/
-class PUNK_Log_Php implements PUNK_LogServiceInterface
+class PUNK_LogPhp implements PUNK_LogInterface
 {
     /******************************************************************
      * METHOD: punk_log()

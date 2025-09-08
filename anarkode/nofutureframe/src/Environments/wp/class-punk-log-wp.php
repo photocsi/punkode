@@ -6,8 +6,8 @@
 |--------------------------------------------------------------------------
 */
 namespace Punkode\Anarkode\NoFutureFrame\Environments\wp;
-use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_LogServiceInterface;
-class PUNK_Log_Wp implements PUNK_LogServiceInterface {
+use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_LogInterface;
+class PUNK_LogWp implements PUNK_LogInterface {
     public function punk_log(string $m,string $l='info'): void {
         if(!function_exists('wp_upload_dir')) return; $u=\wp_upload_dir();
         $dir=rtrim($u['basedir'],'/\\').'/punkode'; if(!is_dir($dir)) @mkdir($dir,0755,true);

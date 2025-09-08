@@ -1,7 +1,7 @@
 <?php
 /*
 |--------------------------------------------------------------------------
-| FILE: anarkode/nofutureframe/src/Contracts/PUNK_ImageServiceInterface.php
+| FILE: anarkode/nofutureframe/src/Contracts/PUNK_ResizeInterface.php
 | DESCRIPTION:
 | EN: Contract for Image Services in NoFutureFrame.
 |     Any environment (WordPress, Laravel, PHP, etc.) that wants to handle
@@ -15,11 +15,11 @@
 namespace Punkode\Anarkode\NoFutureFrame\Contracts;
 
 /**********************************************************************
- * INTERFACE: PUNK_ImageServiceInterface
+ * INTERFACE: PUNK_ResizeInterface
  * EN: Defines the mandatory method for image resizing.
  * IT: Definisce il metodo obbligatorio per il ridimensionamento immagini.
  **********************************************************************/
-interface PUNK_ImageServiceInterface
+interface PUNK_ResizeInterface
 {
     /******************************************************************
      * METHOD: punk_resizeTo()
@@ -47,6 +47,6 @@ interface PUNK_ImageServiceInterface
      *   array → dettagli dell’operazione (dipende dall’implementazione)
      *   false → se il ridimensionamento fallisce
      ******************************************************************/
-    public function punk_resizeTo(string $src, string $dest, int $w, int $h, int $quality = 90): array|false;
+    public function punk_resize_to(string $src, string $dest, int $w, int $h, int $quality = 90): array|false;
 }
 

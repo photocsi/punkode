@@ -14,11 +14,11 @@
 
 namespace Punkode\Anarkode\NoFutureFrame\Environments\PhpLaravel;
 
-use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_ImageServiceInterface;
+use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_ResizeInterface;
 use Punkode\Anarkode\NoFutureFrame\Core\PUNK_ResizeLogic;
 use Punkode\Anarkode\NoFutureFrame\Core\PUNK_PathUtils;
 
-class PUNK_Image_Php implements PUNK_ImageServiceInterface
+class PUNK_ResizePhp implements PUNK_ResizeInterface
 {
     /**********************************************************************
      * EN: Internal policy switches (tune as you like).

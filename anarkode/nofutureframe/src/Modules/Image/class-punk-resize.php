@@ -22,7 +22,7 @@ use Punkode\Anarkode\NoFutureFrame\Core\PUNK_ResizeLogic;
  * IT: Servizio neutro che delega a PUNK_ResizeLogic il calcolo delle
  *     dimensioni target. Utile per pianificare resize senza agire sui file.
  **********************************************************************/
-class PUNK_ImageService
+class PUNK_Resize 
 {
     /******************************************************************
      * METHOD: punk_planResize()
