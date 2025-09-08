@@ -59,7 +59,7 @@ class PUNK_ResizePhp implements PUNK_ResizeInterface
         [$nw, $nh] = PUNK_ResizeLogic::punk_fitBox($ow, $oh, $w, $h);
 
         // ensure destination dir
-        PUNK_ResizeLogic::punk_ensureDir($dest);
+        PUNK_ResizeLogic::punk_ensure_dir($dest);
         $tmp = $dest . '.tmp.' . bin2hex(random_bytes(4));
         $ext = PUNK_PathUtils::punk_extension($dest) ?: 'jpeg';
 

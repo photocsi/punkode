@@ -38,7 +38,7 @@ class PUNK_ResizeLogic
     }
 
     /* *****************************************************************
- * [METHOD / METODO] punk_ensureDir
+ * [METHOD / METODO] punk_ensure_dir
  * -----------------------------------------------------------------
  * EN:
  * Utility to guarantee that the destination directory exists
