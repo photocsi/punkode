@@ -31,7 +31,7 @@ class PUNK_ResizeLogic
  *   il fattore di scala sarà 1.0 (mantiene la dimensione originale).
  * ***************************************************************** */
 
-    public static function punk_fitBox(int $original_w, int $original_h, int $max_w, int $max_h): array
+    public static function punk_fit_box(int $original_w, int $original_h, int $max_w, int $max_h): array
     {
         $r = min($max_w / max(1, $original_w), $max_h / max(1, $original_h), 1.0);
         return [(int)floor($original_w * $r), (int)floor($original_h * $r)];
@@ -59,7 +59,7 @@ class PUNK_ResizeLogic
  *   durante il salvataggio delle immagini.
  * ***************************************************************** */
 
-    public static function punk_ensureDir(string $filePath): void
+    public static function punk_ensure_dir(string $filePath): void
     {
         $dirname = dirname($filePath);
         if (!is_dir($dirname)) @mkdir($dirname, 0755, true);
