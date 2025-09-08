@@ -1,14 +1,16 @@
 <?php
 /*
 |--------------------------------------------------------------------------
-| FILE: anarkode/nofutureframe/src/Contracts/PUNK_ResizeInterface.php
+| FILE: anarkode/nofutureframe/src/Contracts/punk-resize-interface.php
 | DESCRIPTION:
-| EN: Contract for Image Services in NoFutureFrame.
-|     Any environment (WordPress, Laravel, PHP, etc.) that wants to handle
-|     image resizing must implement this interface.
-| IT: Contratto per i Servizi Immagini in NoFutureFrame.
-|     Qualsiasi ambiente (WordPress, Laravel, PHP, ecc.) che vuole gestire
-|     il ridimensionamento immagini deve implementare questa interfaccia.
+| EN: Contract for Resize Services in NoFutureFrame.
+|     Environments (WordPress, Laravel, PHP) implement this to perform
+|     image resizing into a destination path (which in the new pipeline
+|     will be a TEMPORARY local file).
+| IT: Contratto per i servizi di Resize in NoFutureFrame.
+|     Gli ambienti (WordPress, Laravel, PHP) lo implementano per eseguire
+|     il ridimensionamento su un percorso di destinazione (che nella nuova
+|     pipeline sarà un file locale TEMPORANEO).
 |--------------------------------------------------------------------------
 */
 
