@@ -67,11 +67,12 @@ function punk_normalize_files(array $files): array
  */
 function punk_real_mime(string $path): ?string
 {
-    $fi = \finfo_open(\FILEINFO_MIME_TYPE);
+    if (!is_file($path) || !function_exists('finfo_open')) return null;
+    $fi = finfo_open(FILEINFO_MIME_TYPE);
     if (!$fi) return null;
-    $m = \finfo_file($fi, $path) ?: null;
-    \finfo_close($fi);
-    return $m;
+    $mime = finfo_file($fi, $path) ?: null;
+    finfo_close($fi);
+    return $mime ? strtolower($mime) : null;
 }
 
 /**
@@ -83,10 +84,11 @@ function punk_real_mime(string $path): ?string
  */
 function punk_safe_filename(string $name): string
 {
-    $name = \preg_replace('/[^\w\.\-]+/u', '_', $name);
-    $name = \ltrim($name, '.');
-    $name = \preg_replace('/\.+/', '.', $name);
-    return $name ?: 'file';
+    $name = preg_replace('/[^\w\.\-]+/u', '_', $name) ?? '';
+    $name = trim($name);
+    $name = ltrim($name, '.');
+    $name = preg_replace('/\.+/', '.', $name) ?? '';
+    return $name !== '' ? $name : 'file';
 }
 
 /**
