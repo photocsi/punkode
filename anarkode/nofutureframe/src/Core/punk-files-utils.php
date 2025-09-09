@@ -91,26 +91,40 @@ function punk_safe_filename(string $name): string
     return $name !== '' ? $name : 'file';
 }
 
-/**
- * FUNCTION: punk_build_rel_dir()
- * EN: Build a relative folder path.
- *     - 'date'   → 'Y/m/d'
- *     - 'flat'   → ''
- *     - callable → custom string
- * IT: Costruisce un percorso relativo di cartelle.
- *     - 'date'   → 'Y/m/d'
- *     - 'flat'   → ''
- *     - callable → stringa personalizzata
- */
+namespace Punkode\Anarkode\NoFutureFrame\Core;
+
 function punk_build_rel_dir(string|\Closure $scheme = 'date'): string
 {
-    if (\is_callable($scheme)) {
-        $rel = (string)\call_user_func($scheme);
-        return \trim(\str_replace('\\', '/', $rel), '/');
+    // 1) Se è una STRINGA → gestisci gli schemi noti PRIMA di qualsiasi callback
+    if (\is_string($scheme)) {
+        $scheme = \trim($scheme);
+        if ($scheme === '' || $scheme === 'flat') {
+            return '';
+        }
+
+        // "date:<fmt>" → usa DateTimeImmutable (niente date())
+        if (\strncmp($scheme, 'date:', 5) === 0) {
+            $fmt = \substr($scheme, 5) ?: 'Y/m/d';
+            $dt  = new \DateTimeImmutable('now');
+            return \trim(\str_replace('\\', '/', $dt->format($fmt)), '/');
+        }
+
+        // "date"
+        if ($scheme === 'date') {
+            $dt = new \DateTimeImmutable('now');
+            return \trim(\str_replace('\\', '/', $dt->format('Y/m/d')), '/');
+        }
+
+        // qualunque altra stringa: normalizza e restituisci
+        return \trim(\str_replace('\\', '/', $scheme), '/');
     }
-    if ($scheme === 'flat') return '';
-    return \date('Y/m/d');
+
+    // 2) Se è una Closure → eseguila
+    $rel = (string)\call_user_func($scheme);
+    return \trim(\str_replace('\\', '/', $rel), '/');
 }
+
+
 
 /**
  * FUNCTION: punk_unique_name()

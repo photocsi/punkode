@@ -28,10 +28,6 @@
  * IT: Se non già definito, default a 'auto' e tenta di rilevare.
  **********************************************************************/
 if (!defined('PUNK_ENV')) {
-    define('PUNK_ENV', 'auto');
-}
-
-if (PUNK_ENV === 'auto') {
     if (defined('ABSPATH') || defined('WPINC') || function_exists('wp_upload_dir')) {
         define('PUNK_ENV', 'wp');
     } elseif (class_exists('\\Illuminate\\Support\\Facades\\App') || function_exists('base_path')) {

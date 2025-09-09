@@ -6,7 +6,7 @@
 |--------------------------------------------------------------------------
 */
 
-namespace Punkode\Anarkode\NoFutureFrame\Environments\wp;
+namespace Punkode\Anarkode\NoFutureFrame\Environments\Wp;
 
 class PUNK_ResizeWp
 {

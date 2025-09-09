@@ -16,9 +16,9 @@ declare(strict_types=1);
 
 namespace Punkode\Anarkode\NoFutureFrame\Environments\PhpLaravel;
 
-use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_ResizeInterface;
+use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_Resize;
 
-final class PUNK_ResizeLaravel implements PUNK_ResizeInterface
+final class PUNK_ResizeLaravel implements PUNK_Resize
 {
     public function __construct(private ?string $disk = null) {}
 

@@ -1,38 +1,89 @@
 <?php
 /*
-|--------------------------------------------------------------------------
+|-----------------------------------------------------------------------
 | FILE: punkode/anarkode/autoload.php
 | DESCRIPTION:
-| EN: Anarkode entrypoint. Use ONLY this folder by requiring this file.
-|     Composer if available; otherwise internal autoloader.
-| IT: Entrypoint Anarkode. Usa SOLO questa cartella includendo questo file.
-|     Se Composer è disponibile; altrimenti autoloader interno.
-| WHAT IT LOADS / COSA CARICA:
-| - PSR-4 map: Punkode\Anarkode\NoFutureFrame\ → nofutureframe/src/
-| - Helpers (punk_resize, punk_log) from NFF
-|--------------------------------------------------------------------------
+| EN: Anarkode entrypoint. Prefer Composer if available; otherwise defer
+|     to NFF's own autoloader. Includes config before helpers.
+| IT: Entrypoint Anarkode. Se c’è Composer lo usa; altrimenti delega
+|     all’autoloader di NFF. Include la config prima degli helpers.
+|-----------------------------------------------------------------------
 */
-if (!defined('PK_ENV')) { define('PK_ENV', 'wp'); }
 
-// 1) Composer autoload if anarkode/vendor exists (rare) or project vendor nearby
-$paths = [
-    __DIR__ . '/vendor/autoload.php',           // anarkode-local vendor
-    dirname(__DIR__) . '/vendor/autoload.php',  // project vendor if punkode/ not included
+// 0) (Facoltativo) Evita di forzare PK_ENV qui: lasciamo che NFF decida.
+// if (!defined('PK_ENV')) { define('PK_ENV', 'php'); }
+
+/** 1) Composer autoload se esiste (prima locale, poi quello del progetto) */
+$composerCandidates = [
+    __DIR__ . '/vendor/autoload.php',          // vendor sotto anarkode/
+    dirname(__DIR__) . '/vendor/autoload.php', // vendor del progetto
 ];
-foreach ($paths as $p) {
-    if (file_exists($p)) { require_once $p; break; }
+foreach ($composerCandidates as $p) {
+    if (is_file($p)) { require_once $p; break; }
 }
 
-// 2) Internal autoloader for NFF
-spl_autoload_register(function ($class) {
-    $prefix = 'Punkode\\Anarkode\\NoFutureFrame\\';
-    $base   = __DIR__ . '/nofutureframe/src/';
-    if (strncmp($prefix, $class, strlen($prefix)) !== 0) return;
-    $rel = substr($class, strlen($prefix));
-    $file = $base . str_replace('\\','/',$rel) . '.php';
-    $file = strtolower(str_replace('PUNK_', 'class-punk-', $file));
-    if (file_exists($file)) require_once $file;
+/** 2) Prova a usare direttamente l’autoloader di NoFutureFrame */
+$nffAutoload = __DIR__ . '/nofutureframe/autoload.php';
+if (is_file($nffAutoload)) {
+    require_once $nffAutoload; // questo già include config.php (prima) e helpers.php (dopo)
+    return;
+}
+
+/** 3) Fallback: autoloader minimale per NFF (senza lowercasing delle directory) */
+$baseDir = __DIR__ . '/nofutureframe/src/';
+
+// Carica la config PRIMA di tutto (così definisce PUNK_ENV)
+$nffCfg = __DIR__ . '/nofutureframe/config.php';
+if (is_file($nffCfg)) {
+    require_once $nffCfg;
+}
+
+spl_autoload_register(function ($class) use ($baseDir) {
+    $nsPrefix = 'Punkode\\Anarkode\\NoFutureFrame\\';
+
+    // Non è NFF? Esci.
+    if (strncmp($nsPrefix, $class, strlen($nsPrefix)) !== 0) return;
+
+    // Esempio: Punkode\Anarkode\NoFutureFrame\Environments\PhpLaravel\PUNK_ResizeLaravel
+    $relative   = substr($class, strlen($nsPrefix));
+    $segments   = explode('\\', $relative);
+    $shortClass = array_pop($segments);                    // PUNK_ResizeLaravel
+    $subPath    = $segments ? implode('/', $segments).'/' : '';
+
+    // Gestiamo solo classi/iface/trait con prefisso PUNK_
+    if (strncmp('PUNK_', $shortClass, 5) !== 0) return;
+
+    // Tipo: class / interface / trait + name base
+    $nameRemainder = substr($shortClass, 5);
+    $type = 'class';
+    if (preg_match('/^(.*?)(?:_)?Interface$/', $nameRemainder, $m)) {
+        $type     = 'interface';
+        $nameBase = $m[1];
+    } elseif (preg_match('/^(.*?)(?:_)?Trait$/', $nameRemainder, $m)) {
+        $type     = 'trait';
+        $nameBase = $m[1];
+    } else {
+        $nameBase = $nameRemainder;
+    }
+
+    // Slug kebab-case (solo per il nome file, non per le cartelle!)
+    $slug = (strpos($nameBase, '_') !== false)
+        ? strtolower(str_replace('_', '-', $nameBase))
+        : strtolower(preg_replace('/(?<!^)[A-Z]/', '-$0', $nameBase));
+
+    $dir = rtrim($baseDir . $subPath, '/\\') . '/';
+    $candidates = [
+        "{$dir}{$type}-punk-{$slug}.php", // class-punk-*, interface-punk-*, trait-punk-*
+        "{$dir}punk-{$slug}.php",         // fallback opzionale
+    ];
+
+    foreach ($candidates as $file) {
+        if (is_file($file)) { require_once $file; return; }
+    }
 });
 
-// 3) Load helpers of each module we want globally
-require_once __DIR__ . '/nofutureframe/helpers.php';
+// Helpers DOPO la config (e dopo aver registrato l’autoload)
+$nffHelpers = __DIR__ . '/nofutureframe/helpers.php';
+if (is_file($nffHelpers)) {
+    require_once $nffHelpers;
+}

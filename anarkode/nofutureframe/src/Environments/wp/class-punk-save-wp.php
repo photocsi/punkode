@@ -15,9 +15,9 @@
 |--------------------------------------------------------------------------
 */
 
-namespace Punkode\Anarkode\NoFutureFrame\Environments\wp;
+namespace Punkode\Anarkode\NoFutureFrame\Environments\Wp;
 
-use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_SaveInterface;
+use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_Save;
 use Exception;
 
 if (!defined('ABSPATH')) {
@@ -26,7 +26,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class PUNK_SaveWp implements PUNK_SaveInterface
+class PUNK_SaveWp implements PUNK_Save
 {
     /**
      * EN: Persist a local temp file to WordPress uploads and optionally create an attachment.

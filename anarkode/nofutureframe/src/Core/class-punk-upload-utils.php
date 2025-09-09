@@ -18,7 +18,7 @@ declare(strict_types=1);
 
 namespace Punkode\Anarkode\NoFutureFrame\Core;
 
-use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_UploadInterface;
+use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_Upload;
 
 /**
  * CLASS: PUNK_UploadUtils (Upload-only façade)
@@ -34,7 +34,7 @@ use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_UploadInterface;
  * - Mappa i risultati nel formato dell'interfaccia pubblica.
  * - Fornisce metadati completi utili agli step successivi (resize → save o direttamente save).
  */
-final class PUNK_UploadUtils implements PUNK_UploadInterface
+final class PUNK_UploadUtils implements PUNK_Upload
 {
     /**
      * EN: Default options used by this façade, merged with call-time $opts.

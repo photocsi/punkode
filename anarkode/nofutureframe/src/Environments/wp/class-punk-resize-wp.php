@@ -12,11 +12,11 @@
 
 declare(strict_types=1);
 
-namespace Punkode\Anarkode\NoFutureFrame\Environments\wp;
+namespace Punkode\Anarkode\NoFutureFrame\Environments\Wp;
 
-use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_ResizeInterface;
+use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_Resize;
 
-final class PUNK_ResizeWp implements PUNK_ResizeInterface
+final class PUNK_ResizeWp implements PUNK_Resize
 {
     /**
      * @inheritDoc

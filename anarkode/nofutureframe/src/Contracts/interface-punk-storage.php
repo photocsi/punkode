@@ -17,7 +17,7 @@ namespace Punkode\Anarkode\NoFutureFrame\Contracts;
  * EN: Abstraction for storage backends (PHP FS, WordPress, Laravel).
  * IT: Astrazione per backend di storage (FS PHP, WordPress, Laravel).
  **********************************************************************/
-interface PUNK_StorageInterface
+interface PUNK_Storage
 {
     /**
      * EN: Persist a temp file under the given relative destination (e.g. "Y/m/d/name.ext").

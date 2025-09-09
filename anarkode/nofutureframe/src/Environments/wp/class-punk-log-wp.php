@@ -5,9 +5,9 @@
 | DESCRIPTION: EN: WP simple file logger. IT: logger semplice su file per WP.
 |--------------------------------------------------------------------------
 */
-namespace Punkode\Anarkode\NoFutureFrame\Environments\wp;
-use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_LogInterface;
-class PUNK_LogWp implements PUNK_LogInterface {
+namespace Punkode\Anarkode\NoFutureFrame\Environments\Wp;
+use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_Log;
+class PUNK_LogWp implements PUNK_Log {
     public function punk_log(string $m,string $l='info'): void {
         if(!function_exists('wp_upload_dir')) return; $u=\wp_upload_dir();
         $dir=rtrim($u['basedir'],'/\\').'/punkode'; if(!is_dir($dir)) @mkdir($dir,0755,true);

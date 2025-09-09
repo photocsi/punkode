@@ -23,11 +23,11 @@
 
 namespace Punkode\Anarkode\NoFutureFrame\Environments\PhpLaravel;
 
-use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_SaveInterface;
+use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_Save;
 use Illuminate\Support\Facades\Storage;
 use Exception;
 
-class PUNK_SaveLaravel implements PUNK_SaveInterface
+class PUNK_SaveLaravel implements PUNK_Save
 {
     /** @var string */
     protected $disk;

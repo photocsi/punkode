@@ -22,7 +22,7 @@
 
 namespace Punkode\Anarkode\NoFutureFrame\Contracts;
 
-interface PUNK_SaveInterface
+interface PUNK_Save
 {
     /**
      * EN:

@@ -12,7 +12,7 @@
 |--------------------------------------------------------------------------
 */
 
-namespace Punkode\Anarkode\NoFutureFrame\Environments\wp;
+namespace Punkode\Anarkode\NoFutureFrame\Environments\Wp;
 
 use Punkode\Anarkode\NoFutureFrame\Core\PUNK_FileAsset;
 use function Punkode\Anarkode\NoFutureFrame\Core\punk_real_mime;

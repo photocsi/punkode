@@ -16,11 +16,11 @@ namespace Punkode\Anarkode\NoFutureFrame\Environments\PhpLaravel;
 // NOTE EN: If you move this file under environments/php/, update the namespace to ...\Environments\Php
 // NOTE IT: Se sposti il file in environments/php/, aggiorna il namespace in ...\Environments\Php
 
-use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_ResizeInterface;
+use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_Resize;
 use Punkode\Anarkode\NoFutureFrame\Core\PUNK_ResizeLogic;
 use Punkode\Anarkode\NoFutureFrame\Core\PUNK_PathUtils;
 
-class PUNK_ResizePhp implements PUNK_ResizeInterface
+final class PUNK_ResizePhp implements PUNK_Resize
 {
     /**********************************************************************
      * EN: Internal policy switches (tune as needed).
@@ -35,7 +35,7 @@ class PUNK_ResizePhp implements PUNK_ResizeInterface
      * EN: Resize entrypoint. Imagick → GD fallback. Returns ['path','width','height'] or false.
      * IT: Entrata di resize. Imagick → fallback GD. Ritorna ['path','width','height'] o false.
      */
-    public function punk_resizeTo(string $src, string $dest, int $w, int $h, int $quality = 90): array|false
+    public function punk_resize_to(string $src, string $dest, int $w, int $h, int $quality = 90): array|false
     {
         $q = max(0, min(100, (int)$quality));
 

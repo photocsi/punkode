@@ -17,7 +17,7 @@ namespace Punkode\Anarkode\NoFutureFrame\Contracts;
  * EN: Public API for uploading (single/multi). Returns one result per file.
  * IT: API pubblica per l'upload (singolo/multiplo). Ritorna un risultato per file.
  **********************************************************************/
-interface PUNK_UploadInterface
+interface PUNK_Upload
 {
     /**
      * @param array $files $_FILES-like or normalized flat list

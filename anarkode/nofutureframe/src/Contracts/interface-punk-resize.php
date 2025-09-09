@@ -21,7 +21,7 @@ namespace Punkode\Anarkode\NoFutureFrame\Contracts;
  * EN: Defines the mandatory method for image resizing.
  * IT: Definisce il metodo obbligatorio per il ridimensionamento immagini.
  **********************************************************************/
-interface PUNK_ResizeInterface
+interface PUNK_Resize
 {
     /******************************************************************
      * METHOD: punk_resizeTo()

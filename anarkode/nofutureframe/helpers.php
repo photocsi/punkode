@@ -16,18 +16,19 @@ declare(strict_types=1);
 
 /**********************************************************************
  * ENVIRONMENT
- * EN: Default environment. Allowed: "wp" | "php" | "laravel".
- * IT: Ambiente di default. Ammessi: "wp" | "php" | "laravel".
+ * EN: Default environment only if not already defined by config.php.
+ * IT: Ambiente di fallback solo se non già definito da config.php.
  **********************************************************************/
 if (!defined('PUNK_ENV')) {
-    define('PUNK_ENV', 'wp');
+    define('PUNK_ENV', 'php'); // 'php' | 'laravel' | 'wp'
 }
 
 /**********************************************************************
  * IMPORTS (interfaces & core)
  **********************************************************************/
-use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_ResizeInterface;
-use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_LogInterface;
+use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_Resize;
+use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_Log;
+use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_Save;
 
 use Punkode\Anarkode\NoFutureFrame\Core\PUNK_UploadCore;
 use Punkode\Anarkode\NoFutureFrame\Core\PUNK_UploadUtils;
@@ -43,29 +44,41 @@ use function Punkode\Anarkode\NoFutureFrame\Core\punk_build_rel_dir;
  * IT: Seleziona i servizi concreti per ambiente (quando serve).
  **********************************************************************/
 
+// Carica le funzioni core (le funzioni NON passano dall'autoloader)
+$__punk_fn = __DIR__ . '/src/Core/punk-files-utils.php';
+if (!is_file($__punk_fn)) {
+    throw new \RuntimeException('NFF: missing file ' . $__punk_fn);
+}
+require_once $__punk_fn;
+try {
+    $rf = new \ReflectionFunction('\\Punkode\\Anarkode\\NoFutureFrame\\Core\\punk_build_rel_dir');
+    error_log('USO punk_build_rel_dir da ' . $rf->getFileName() . ':' . $rf->getStartLine());
+    $lines = @file($rf->getFileName());
+    if ($lines && isset($lines[96])) { // 97 = index 96
+        error_log('Contenuto linea 97: ' . rtrim($lines[96]));
+    }
+} catch (\Throwable $e) {
+    error_log('Reflection failed: ' . $e->getMessage());
+}
+
+
+
+
 /**
  * EN: Resize/Image service selector.
  * IT: Selettore servizio Resize/Immagini.
  */
 if (!function_exists('punk_env_image_service')) {
-    function punk_env_image_service(?string $disk = null): PUNK_ResizeInterface
+    function punk_env_image_service(?string $disk = null): PUNK_Resize
     {
-        // WordPress
         if (PUNK_ENV === 'wp') {
-            return new \Punkode\Anarkode\NoFutureFrame\Environments\wp\PUNK_ResizeWp();
+            return new \Punkode\Anarkode\NoFutureFrame\Environments\Wp\PUNK_ResizeWp();
         }
-
-        // Laravel / PHP
-        $extra = __DIR__ . '/src/environments/phplaravel';
-        if (is_dir($extra)) {
-            if (PUNK_ENV === 'laravel' && class_exists('Illuminate\\Support\\Facades\\Storage')) {
-                return new \Punkode\Anarkode\NoFutureFrame\Environments\PhpLaravel\PUNK_ResizeLaravel($disk);
-            }
-            // Fallback: pure PHP adapter hosted under PhpLaravel namespace (compat layer)
-            return new \Punkode\Anarkode\NoFutureFrame\Environments\PhpLaravel\PUNK_ResizePhp();
+        if (PUNK_ENV === 'laravel' && class_exists('\Illuminate\Support\Facades\Storage')) {
+            return new \Punkode\Anarkode\NoFutureFrame\Environments\PhpLaravel\PUNK_ResizeLaravel($disk);
         }
-
-        throw new \RuntimeException('NFF: no suitable ImageService for env: ' . PUNK_ENV);
+        // PHP puro (adapter nel namespace PhpLaravel come compat layer)
+        return new \Punkode\Anarkode\NoFutureFrame\Environments\PhpLaravel\PUNK_ResizePhp();
     }
 }
 
@@ -84,25 +97,34 @@ if (!function_exists('punk_env_upload_utils')) {
 }
 
 /**
- * EN: Log service selector (optional).
- * IT: Selettore servizio Log (opzionale).
+ * EN: Log service selector.
+ * IT: Selettore servizio Log.
  */
 if (!function_exists('punk_env_log_service')) {
-    function punk_env_log_service(): PUNK_LogInterface
+    function punk_env_log_service(): PUNK_Log
     {
         if (PUNK_ENV === 'wp') {
-            return new \Punkode\Anarkode\NoFutureFrame\Environments\wp\PUNK_LogWp();
+            return new \Punkode\Anarkode\NoFutureFrame\Environments\Wp\PUNK_LogWp();
         }
+        // PHP & Laravel (logger semplice su file)
+        return new \Punkode\Anarkode\NoFutureFrame\Environments\PhpLaravel\PUNK_LogPhp();
+    }
+}
 
-        $extra = __DIR__ . '/src/environments/phplaravel';
-        if (is_dir($extra)) {
-            return new \Punkode\Anarkode\NoFutureFrame\Environments\PhpLaravel\PUNK_LogPhp();
+/**
+ * EN: Save-to-storage service selector.
+ * IT: Selettore servizio di salvataggio finale su storage.
+ */
+if (!function_exists('punk_env_save_service')) {
+    function punk_env_save_service(?string $disk = null): PUNK_Save
+    {
+        if (PUNK_ENV === 'wp') {
+            return new \Punkode\Anarkode\NoFutureFrame\Environments\Wp\PUNK_SaveWp();
         }
-
-        // Last resort: silent no-op logger
-        return new class implements PUNK_LogInterface {
-            public function punk_log(string $message, string $level = 'info'): void {}
-        };
+        if (PUNK_ENV === 'laravel' && class_exists('\Illuminate\Support\Facades\Storage')) {
+            return new \Punkode\Anarkode\NoFutureFrame\Environments\PhpLaravel\PUNK_SaveLaravel($disk ?? 'public');
+        }
+        return new \Punkode\Anarkode\NoFutureFrame\Environments\PhpLaravel\PUNK_SavePhp();
     }
 }
 
@@ -117,19 +139,7 @@ if (!function_exists('punk_env_log_service')) {
 /**
  * FUNCTION: punk_upload_only
  * EN: Perform ONLY the ingestion/validation. No final storage here.
- *     $files can be:
- *       - a single $_FILES[...] array,
- *       - a multiple $_FILES structure,
- *       - or a normalized flat list (name,type,tmp_name,error,size).
- *     $opts are merged into UploadUtils defaults (e.g., allowed_mimes, max_mb,
- *     randomize_name, dest_scheme 'date'|'flat'|callable).
  * IT: Esegue SOLO ingest/validazione. Nessun salvataggio finale qui.
- *     $files può essere:
- *       - un singolo array $_FILES[...],
- *       - una struttura multipla di $_FILES,
- *       - oppure una lista piatta normalizzata (name,type,tmp_name,error,size).
- *     $opts si uniscono ai default di UploadUtils (es. allowed_mimes, max_mb,
- *     randomize_name, dest_scheme 'date'|'flat'|callable).
  */
 if (!function_exists('punk_upload_only')) {
     function punk_upload_only(array $files, array $opts = []): array
@@ -139,25 +149,37 @@ if (!function_exists('punk_upload_only')) {
 
         // Build upload façade (ingest-only)
         $upload = punk_env_upload_utils([
-            // Set sensible global defaults here if you want
-            // Imposta qui eventuali default globali
+            // EN: set global defaults here if you want
+            // IT: imposta eventuali default globali qui
         ]);
 
-        // Delegate to UploadUtils (maps path/url=null; exposes tmp_path & metadata)
+        // Delegate to UploadUtils (exposes tmp_path & metadata)
         return $upload->punk_upload_files($flat, $opts);
+    }
+}
+
+/**
+ * FUNCTION: punk_upload
+ * EN: High-level alias of upload-only (ingest/validate), accepts $_FILES single/multi.
+ * IT: Alias alto livello di upload-only (ingest/validate), accetta $_FILES singolo/multiplo.
+ */
+if (!function_exists('punk_upload')) {
+    function punk_upload(array $files, array $opts = []): array
+    {
+        return punk_upload_only($files, $opts);
     }
 }
 
 /**********************************************************************
  * HIGH-LEVEL: RESIZE
- * EN: Simple wrappers around the environment image service.
- * IT: Wrapper semplici attorno al servizio immagini per ambiente.
+ * EN: Thin wrappers around the environment image service.
+ * IT: Wrapper sottili attorno al servizio immagini per ambiente.
  **********************************************************************/
 
 /**
  * FUNCTION: punk_resize
- * EN: Resize a single image. Returns ['path','width','height'] or false.
- * IT: Resize singolo. Ritorna ['path','width','height'] oppure false.
+ * EN: Resize a single image to dest. Returns ['path','width','height'] or false.
+ * IT: Resize singolo verso dest. Ritorna ['path','width','height'] oppure false.
  */
 if (!function_exists('punk_resize')) {
     function punk_resize(string $src, string $dest, int $w, int $h, int $quality = 90, ?string $disk = null): array|false
@@ -168,8 +190,8 @@ if (!function_exists('punk_resize')) {
 
 /**
  * FUNCTION: punk_resize_batch
- * EN: Batch resize. $jobs = [['src'=>..., 'dest'=>..., 'w'=>..., 'h'=>..., 'quality'=>?, 'disk'=>?], ...]
- * IT: Resize in batch. $jobs = [['src'=>..., 'dest'=>..., 'w'=>..., 'h'=>..., 'quality'=>?, 'disk'=>?], ...]
+ * EN: Batch resize with explicit jobs.
+ * IT: Resize in batch con job espliciti.
  */
 if (!function_exists('punk_resize_batch')) {
     function punk_resize_batch(array $jobs): array
@@ -199,10 +221,110 @@ if (!function_exists('punk_resize_batch')) {
     }
 }
 
+/**
+ * FUNCTION: punk_resize_versions
+ * EN: Create multiple resized versions per input.
+ *     - $items: output from punk_upload()/punk_upload_only() OR array of absolute paths
+ *     - $sizes: map label => int|maxSide  OR label => ['w'=>..,'h'=>..,'quality'=>..]
+ *     - $opts:  ['dest_dir' => '/abs/path' (default: sys_temp_dir), 'disk' => null]
+ * RETURNS: array like:
+ *   [
+ *     [
+ *       'source' => '/abs/src.jpg',
+ *       'versions' => ['sm'=>['path'=>...,'width'=>...,'height'=>...], ...]
+ *     ],
+ *     ...
+ *   ]
+ * IT: Crea più versioni ridotte per input multipli (da upload o da path).
+ */
+if (!function_exists('punk_resize_versions')) {
+    function punk_resize_versions(array $items, array $sizes, array $opts = []): array
+    {
+        $destDir = isset($opts['dest_dir']) && is_string($opts['dest_dir']) && $opts['dest_dir'] !== ''
+            ? rtrim($opts['dest_dir'], "/\\")
+            : sys_get_temp_dir();
+
+        $disk = $opts['disk'] ?? null;
+
+        // Normalizza sorgenti: accetta output di upload_* oppure array di path
+        $sources = [];
+        $looksLikeUpload = isset($items[0]['meta']) || (isset($items[0][0]['meta']));
+        if ($looksLikeUpload) {
+            foreach ($items as $row) {
+                if (isset($row['meta']['tmp_path'])) {
+                    $sources[] = [
+                        'path' => (string)$row['meta']['tmp_path'],
+                        'name' => (string)($row['meta']['safe_name'] ?? $row['name'] ?? basename($row['meta']['tmp_path'])),
+                    ];
+                }
+            }
+        } else {
+            foreach ($items as $p) {
+                $p = (string)$p;
+                if (is_file($p)) {
+                    $sources[] = [
+                        'path' => $p,
+                        'name' => pathinfo($p, PATHINFO_FILENAME),
+                    ];
+                }
+            }
+        }
+
+        $out = [];
+        foreach ($sources as $src) {
+            $srcPath = $src['path'];
+            $name    = preg_replace('/\.[^.]+$/', '', $src['name']);
+            $ext     = strtolower(pathinfo($srcPath, PATHINFO_EXTENSION)) ?: 'jpg';
+
+            $one = ['source' => $srcPath, 'versions' => []];
+
+            foreach ($sizes as $label => $def) {
+                // Consenti sia formato semplice (int => lato max) sia array dettagliato
+                if (is_array($def)) {
+                    $w = (int)($def['w'] ?? 0);
+                    $h = (int)($def['h'] ?? 0);
+                    $q = isset($def['quality']) ? (int)$def['quality'] : 90;
+                    if ($w <= 0 && $h > 0) { $w = $h; }
+                    if ($h <= 0 && $w > 0) { $h = $w; }
+                } else {
+                    $w = (int)$def;
+                    $h = (int)$def;
+                    $q = 90;
+                }
+                if ($w <= 0 || $h <= 0) {
+                    $one['versions'][$label] = ['error' => 'invalid size'];
+                    continue;
+                }
+
+                $dest = $destDir . DIRECTORY_SEPARATOR . $name . '-' . $label . '.' . $ext;
+                try {
+                    $res = punk_env_image_service($disk)->punk_resize_to($srcPath, $dest, $w, $h, $q);
+                    if ($res && is_file($dest)) {
+                        $one['versions'][$label] = [
+                            'path'   => $dest,
+                            'width'  => $res['width']  ?? null,
+                            'height' => $res['height'] ?? null
+                        ];
+                    } else {
+                        $one['versions'][$label] = ['error' => 'resize failed'];
+                    }
+                } catch (\Throwable $e) {
+                    punk_log('[punk_resize_versions] ' . $e->getMessage(), 'error');
+                    $one['versions'][$label] = ['error' => $e->getMessage()];
+                }
+            }
+
+            $out[] = $one;
+        }
+
+        return $out;
+    }
+}
+
 /**********************************************************************
- * HIGH-LEVEL: SAVE
- * EN: Save/Derivatives. Works with an already-uploaded original.
- * IT: Salvataggio/Derivati. Lavora su un originale già caricato.
+ * HIGH-LEVEL: SAVE (DERIVATIVES/MANIFEST) — editoriale
+ * EN: Works with an already-uploaded original file on disk.
+ * IT: Lavora con un originale già presente su disco.
  **********************************************************************/
 
 /**
@@ -211,8 +333,7 @@ if (!function_exists('punk_resize_batch')) {
  *     persist a manifest (strategy depends on PUNK_SaveUtils).
  *     $sizes = ['thumb'=>[320,320,'jpg'], 'large'=>[1200,1200,'webp'], ...]
  *     Returns manifest array or false.
- * IT: Genera derivati (sizes) da un originale già caricato e salva un manifest
- *     (strategia definita da PUNK_SaveUtils). Ritorna un manifest o false.
+ * IT: Genera derivati (sizes) da un originale già caricato e salva un manifest.
  */
 if (!function_exists('punk_save')) {
     function punk_save(string $original_path, array $sizes, int $quality = 85, ?string $disk = null): array|false
@@ -248,6 +369,69 @@ if (!function_exists('punk_save_batch')) {
         $out  = [];
         foreach ($list as $orig) {
             $out[] = punk_save((string)$orig, $sizes, $quality, $disk);
+        }
+        return $out;
+    }
+}
+
+/**********************************************************************
+ * SAVE TO STORAGE (final copy/move from temp)
+ * EN: Persist resized temp files into final storage (PHP path, WP uploads, Laravel disk).
+ * IT: Salva i file temporanei ridimensionati nello storage finale (path PHP, uploads WP, disk Laravel).
+ **********************************************************************/
+
+/**
+ * FUNCTION: punk_save_from_temp
+ * EN: Single temp → final destination (abs path in PHP; relative path in WP/Laravel).
+ * IT: Singolo temp → destinazione finale (path assoluto in PHP; path relativo in WP/Laravel).
+ */
+if (!function_exists('punk_save_from_temp')) {
+    function punk_save_from_temp(string $tmp, string $dest, array $opts = []): array|false
+    {
+        return punk_env_save_service($opts['disk'] ?? null)->punk_save_from_temp($tmp, $dest, $opts);
+    }
+}
+
+/**
+ * FUNCTION: punk_save_all
+ * EN: Persist a whole set of resized versions into final storage.
+ *     - $versionSets: output of punk_resize_versions()
+ *     - $opts: ['dest_base' => '/abs/dir' OR 'folder/rel' (WP/Laravel),
+ *               'disk' => 'public', 'overwrite' => true]
+ * RETURNS: same structure with final info per version (adapter-dependent).
+ * IT: Salva in blocco tutte le versioni ridotte nella destinazione finale.
+ */
+if (!function_exists('punk_save_all')) {
+    function punk_save_all(array $versionSets, array $opts = []): array
+    {
+        $destBase  = rtrim((string)($opts['dest_base'] ?? ''), "/\\");
+        $overwrite = (bool)($opts['overwrite'] ?? false);
+        $disk      = $opts['disk'] ?? null;
+
+        $saveOne = function (string $tmp, string $relOrAbs) use ($disk, $overwrite, $opts) {
+            $o = $opts;
+            $o['disk'] = $disk;
+            $o['overwrite'] = $overwrite;
+            return punk_save_from_temp($tmp, $relOrAbs, $o);
+        };
+
+        $out = [];
+        foreach ($versionSets as $set) {
+            $entry = [
+                'source'   => $set['source'] ?? null,
+                'versions' => [],
+            ];
+            foreach (($set['versions'] ?? []) as $label => $v) {
+                if (!empty($v['path']) && is_file($v['path'])) {
+                    $baseName = basename($v['path']);
+                    $dest     = $destBase ? $destBase . DIRECTORY_SEPARATOR . $baseName : $baseName;
+                    $res      = $saveOne($v['path'], $dest);
+                    $entry['versions'][$label] = $res ?: ['error' => 'save failed', 'tmp' => $v['path']];
+                } else {
+                    $entry['versions'][$label] = ['error' => 'missing tmp'];
+                }
+            }
+            $out[] = $entry;
         }
         return $out;
     }
@@ -292,3 +476,53 @@ if (!function_exists('punk_path_to_url')) {
         return '';
     }
 }
+
+/**
+ * FUNCTION: punk_process_upload
+ * EN: One-shot helper: upload files, generate multiple versions, save finals.
+ * IT: Helper unico: carica i file, genera versioni multiple, salva i finali.
+ *
+ * @param array $files  $_FILES[...] (singolo o multiplo)
+ * @param array $sizes  ['sm'=>800,'md'=>1600,'lg'=>2400]  (lato max o array dettagli)
+ * @param array $opts   ['dest_base'=>..., 'overwrite'=>true, 'disk'=>..., 'dest_dir'=>...]
+ * @return array        Risultati normalizzati per viste (name, versions[sm|md|lg][final])
+ */
+if (!function_exists('punk_process_upload')) {
+    function punk_process_upload(array $files, array $sizes, array $opts = []): array
+    {
+        // 1) Upload
+        $uploaded = punk_upload($files);
+
+        // 2) Resize (temp)
+        $versions = punk_resize_versions($uploaded, $sizes, [
+            'dest_dir' => $opts['dest_dir'] ?? sys_get_temp_dir(),
+            'disk'     => $opts['disk']     ?? null,
+        ]);
+
+        // 3) Save finale
+        $saved = punk_save_all($versions, [
+            'dest_base' => $opts['dest_base'] ?? (__DIR__.'/img'),
+            'overwrite' => $opts['overwrite'] ?? false,
+            'disk'      => $opts['disk']      ?? null,
+        ]);
+
+        // 4) Normalizza per vista
+        $out = [];
+        foreach ($saved as $set) {
+            $name = basename($set['source'] ?? '');
+            $card = ['ok'=>true, 'name'=>$name, 'versions'=>[]];
+            foreach ($sizes as $lbl => $_) {
+                $final = $set['versions'][$lbl]['final'] ?? ($set['versions'][$lbl]['path'] ?? null);
+                if ($final && is_file($final)) {
+                    $card['versions'][$lbl] = ['final' => $final];
+                } else {
+                    $card['versions'][$lbl] = ['final'=>null];
+                    $card['ok'] = false;
+                }
+            }
+            $out[] = $card;
+        }
+        return $out;
+    }
+}
+

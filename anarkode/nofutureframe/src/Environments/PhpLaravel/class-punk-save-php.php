@@ -18,10 +18,10 @@
 
 namespace Punkode\Anarkode\NoFutureFrame\Environments\PhpLaravel;
 
-use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_SaveInterface;
+use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_Save;
 use Exception;
 
-class PUNK_SavePhp implements PUNK_SaveInterface
+class PUNK_SavePhp implements PUNK_Save
 {
     /**
      * EN: Persist a local temp file to a final filesystem path.
