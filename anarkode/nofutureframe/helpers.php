@@ -26,6 +26,7 @@ if (!defined('PUNK_ENV')) {
 /**********************************************************************
  * IMPORTS (interfaces & core)
  **********************************************************************/
+
 use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_Resize;
 use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_Log;
 use Punkode\Anarkode\NoFutureFrame\Contracts\PUNK_Save;
@@ -91,10 +92,22 @@ if (!function_exists('punk_env_image_service')) {
 if (!function_exists('punk_env_upload_utils')) {
     function punk_env_upload_utils(array $defaults = []): PUNK_UploadUtils
     {
+        // EN: Create the core upload engine (low-level functions: move, validate, inspect).
+        // IT: Crea il motore di upload di base (funzioni a basso livello: spostare, validare, ispezionare).
         $core = new PUNK_UploadCore();
+
+        // EN: Wrap the core in a higher-level utility that:
+        //     - merges defaults (e.g. allowed mimes, max size),
+        //     - exposes consistent methods like punk_upload_files(),
+        //     - can be extended for WordPress, Laravel, or pure PHP.
+        // IT: Incapsula il core in una utility di livello superiore che:
+        //     - applica i defaults (es. mime consentiti, dimensione massima),
+        //     - espone metodi coerenti come punk_upload_files(),
+        //     - può essere estesa per WordPress, Laravel o PHP puro.
         return new PUNK_UploadUtils($core, $defaults);
     }
 }
+
 
 /**
  * EN: Log service selector.
@@ -144,19 +157,35 @@ if (!function_exists('punk_env_save_service')) {
 if (!function_exists('punk_upload_only')) {
     function punk_upload_only(array $files, array $opts = []): array
     {
-        // Normalize any $_FILES shape to a flat list
+        // EN: Normalize $_FILES into a consistent flat array of items.
+        //     $_FILES può essere annidato (per input multiple) → semplifica.
+        // IT: Normalizza $_FILES in un array piatto e coerente di elementi.
+        //     $_FILES può essere annidato (input multipli) → qui semplifichi.
         $flat = punk_normalize_files($files);
 
-        // Build upload façade (ingest-only)
+        // EN: Build the upload utility for the current environment (PHP, WP, Laravel…).
+        //     This function returns an adapter object exposing methods like punk_upload_files().
+        // IT: Costruisci l’utility di upload per l’ambiente corrente (PHP, WP, Laravel…).
+        //     Questa funzione restituisce un adapter con metodi come punk_upload_files().
         $upload = punk_env_upload_utils([
-            // EN: set global defaults here if you want
-            // IT: imposta eventuali default globali qui
+            // EN: You can put default settings here (e.g., allowed mime, max size).
+            // IT: Puoi mettere qui impostazioni di default (es. mime consentiti, max size).
         ]);
 
-        // Delegate to UploadUtils (exposes tmp_path & metadata)
+        // EN: Delegate the actual saving to the adapter.
+        //     It will:
+        //       - move the temp files to safe tmp_path,
+        //       - collect metadata (mime, size, safe_name…),
+        //       - return an array of info for each file.
+        // IT: Delega il salvataggio vero e proprio all’adapter.
+        //     L’adapter:
+        //       - sposta i file temporanei in un tmp_path sicuro,
+        //       - raccoglie metadati (mime, size, safe_name…),
+        //       - restituisce un array di info per ogni file.
         return $upload->punk_upload_files($flat, $opts);
     }
 }
+
 
 /**
  * FUNCTION: punk_upload
@@ -166,6 +195,8 @@ if (!function_exists('punk_upload_only')) {
 if (!function_exists('punk_upload')) {
     function punk_upload(array $files, array $opts = []): array
     {
+        // EN: Just a thin wrapper — currently it delegates to punk_upload_only().
+        // IT: Solo un involucro sottile — al momento delega tutto a punk_upload_only().
         return punk_upload_only($files, $opts);
     }
 }
@@ -284,8 +315,12 @@ if (!function_exists('punk_resize_versions')) {
                     $w = (int)($def['w'] ?? 0);
                     $h = (int)($def['h'] ?? 0);
                     $q = isset($def['quality']) ? (int)$def['quality'] : 90;
-                    if ($w <= 0 && $h > 0) { $w = $h; }
-                    if ($h <= 0 && $w > 0) { $h = $w; }
+                    if ($w <= 0 && $h > 0) {
+                        $w = $h;
+                    }
+                    if ($h <= 0 && $w > 0) {
+                        $h = $w;
+                    }
                 } else {
                     $w = (int)$def;
                     $h = (int)$def;
@@ -408,7 +443,34 @@ if (!function_exists('punk_save_all')) {
         $overwrite = (bool)($opts['overwrite'] ?? false);
         $disk      = $opts['disk'] ?? null;
 
-        $saveOne = function (string $tmp, string $relOrAbs) use ($disk, $overwrite, $opts) {
+        $ensureDir = function (string $path): bool {
+            $dir = dirname($path);
+            if (!is_dir($dir)) {
+                return @mkdir($dir, 0777, true);
+            }
+            return true;
+        };
+
+        $robustMove = function (string $tmp, string $dest) use ($overwrite) {
+            if (!$overwrite && is_file($dest)) return ['error' => 'exists', 'final' => null];
+
+            if (!$ensure = (is_dir(dirname($dest)) || @mkdir(dirname($dest), 0777, true))) {
+                return ['error' => 'mkdir failed: ' . dirname($dest), 'final' => null];
+            }
+
+            // Prova rename, poi copy+unlink
+            if (@rename($tmp, $dest)) {
+                return ['final' => $dest];
+            }
+            if (@copy($tmp, $dest)) {
+                @unlink($tmp);
+                return ['final' => $dest];
+            }
+            $e = error_get_last();
+            return ['error' => ($e['message'] ?? 'move failed'), 'final' => null];
+        };
+
+        $serviceMove = function (string $tmp, string $relOrAbs) use ($disk, $overwrite, $opts) {
             $o = $opts;
             $o['disk'] = $disk;
             $o['overwrite'] = $overwrite;
@@ -423,10 +485,117 @@ if (!function_exists('punk_save_all')) {
             ];
             foreach (($set['versions'] ?? []) as $label => $v) {
                 if (!empty($v['path']) && is_file($v['path'])) {
-                    $baseName = basename($v['path']);
-                    $dest     = $destBase ? $destBase . DIRECTORY_SEPARATOR . $baseName : $baseName;
-                    $res      = $saveOne($v['path'], $dest);
-                    $entry['versions'][$label] = $res ?: ['error' => 'save failed', 'tmp' => $v['path']];
+                    // -----------------------------------------------------------
+                    // EN: Per-label destination (dir + optional suffix) + filename
+                    // IT: Destinazione per label (dir + suffisso opzionale) + nome file
+                    // -----------------------------------------------------------
+
+                    // 0) Opzioni provenienti dal chiamante
+                    $perLabel = $opts['sizes']        ?? [];  // EN: mirror of $sizes from caller | IT: copia del $sizes del chiamante
+                    $mapDir   = $opts['dir_by_label'] ?? [];  // EN: optional override          | IT: override opzionale per dir
+
+                    // 1) Cartella specifica per etichetta (prima da $sizes[label]['dir'], poi da dir_by_label)
+                    $labelDir = null;
+                    if (!empty($perLabel[$label]['dir'])) {
+                        $labelDir = trim((string)$perLabel[$label]['dir'], "/\\");
+                    } elseif (!empty($mapDir[$label])) {
+                        $labelDir = trim((string)$mapDir[$label], "/\\");
+                    }
+
+                    // 2) Suffisso nel nome? (default: true). Se false → niente "-{label}".
+                    //    ATTENZIONE: senza suffisso rischi sovrascrivere, a meno che le dir siano diverse.
+                    $useSuffix = true;
+                    if (array_key_exists('suffix', $perLabel[$label] ?? [])) {
+                        $useSuffix = (bool)$perLabel[$label]['suffix'];
+                    }
+
+                    // 3) Orig base già iniettato a monte (es. "DSC_1234"); fallback "image"
+                    $origBase = !empty($set['orig_base']) ? (string)$set['orig_base'] : 'image';
+
+                    // 4) Estensione finale (preferisci v['ext']/['format']; fallback dalla path o 'jpg')
+                    $tmpPath = $v['path'];
+                    $ext = $v['ext'] ?? $v['format'] ?? strtolower(pathinfo($tmpPath, PATHINFO_EXTENSION) ?: 'jpg');
+                    if ($ext === 'jpeg') $ext = 'jpg';
+                    if (!in_array($ext, ['jpg', 'png', 'webp', 'gif', 'bmp', 'tiff', 'avif'], true)) {
+                        $ext = 'jpg';
+                    }
+
+                    // 5) Filename finale: con o senza suffisso
+                    // 5) Sanitize label → safe for filenames
+                    $labelSafe = preg_replace('~[^A-Za-z0-9._-]+~', '-', (string)$label);
+                    $labelSafe = trim($labelSafe, '-._');
+
+                    // EN: Filename with or without suffix
+                    // IT: Nome file con o senza suffisso
+                    $finalName = $useSuffix
+                        ? ($origBase . '-' . $labelSafe . '.' . $ext)
+                        : ($origBase . '.' . $ext);
+
+
+                    // 6) Costruisci la directory di destinazione e assicurati esista
+                    $destDir = rtrim($destBase, "/\\");
+                    if ($labelDir) {
+                        $destDir .= DIRECTORY_SEPARATOR . $labelDir;
+                    }
+                    // 6) Costruisci la directory di destinazione e assicurati esista
+                    $destDir = rtrim($destBase, "/\\");
+                    if ($labelDir) {
+                        $destDir .= DIRECTORY_SEPARATOR . $labelDir;
+                    }
+
+                    if (!is_dir($destDir)) {
+                        if (!@mkdir($destDir, 0775, true) && !is_dir($destDir)) {
+                            // EN: mkdir failed even after attempt → record error and skip this version
+                            // IT: mkdir fallito anche dopo il tentativo → registra errore e salta questa versione
+                            $entry['versions'][$label] = ['error' => 'mkdir failed: ' . $destDir];
+                            continue; // salta questa versione
+                        }
+                    }
+
+
+                    // 7) Path di destinazione completo
+                    $dest = $destDir . DIRECTORY_SEPARATOR . $finalName;
+
+                    // 8) Evita il caso rarissimo tmp==dest (se il tmp è già lì con stesso nome)
+                    $rpT = realpath($tmpPath);
+                    $rpD = realpath(dirname($dest));
+                    if ($rpT && $rpD && (dirname($rpT) === $rpD) && (basename($rpT) === basename($dest))) {
+                        $pi   = pathinfo($dest);
+                        $dest = $pi['dirname'] . DIRECTORY_SEPARATOR . $pi['filename'] . '-final.' . ($pi['extension'] ?? 'jpg');
+                    }
+
+
+
+                    // 1° tentativo: adapter ufficiale
+                    $res = $serviceMove($tmpPath, $dest);
+
+                    // 2° tentativo: fallback robusto se l’adapter fallisce (solo per PHP puro/paths)
+                    if (!$res || empty($res['final']) || !is_file($res['final'])) {
+                        $res2 = $robustMove($tmpPath, $dest);
+                        // arricchisci per debug
+                        $res = [
+                            'final' => $res2['final'] ?? null,
+                            'error' => $res2['error'] ?? ($res['error'] ?? 'save failed'),
+                            'debug_tmp'  => $tmpPath,
+                            'debug_dest' => $dest,
+                            'fallback'   => true,
+                        ];
+                    } else {
+                        $res['debug_tmp']  = $tmpPath;
+                        $res['debug_dest'] = $dest;
+                        $res['fallback']   = false;
+                    }
+
+                    $entry['versions'][$label] = array_merge($res, [
+                        'label'    => (string)$label,
+                        'filename' => $finalName,
+                        'ext'      => $ext,
+                        // niente rel_path, niente url
+                    ]);
+
+
+
+                    $entry['versions'][$label] = $res;
                 } else {
                     $entry['versions'][$label] = ['error' => 'missing tmp'];
                 }
@@ -436,6 +605,7 @@ if (!function_exists('punk_save_all')) {
         return $out;
     }
 }
+
 
 /**********************************************************************
  * LOGGING (optional)
@@ -487,42 +657,270 @@ if (!function_exists('punk_path_to_url')) {
  * @param array $opts   ['dest_base'=>..., 'overwrite'=>true, 'disk'=>..., 'dest_dir'=>...]
  * @return array        Risultati normalizzati per viste (name, versions[sm|md|lg][final])
  */
+// Sostituisci la tua punk_process_upload con questa:
 if (!function_exists('punk_process_upload')) {
     function punk_process_upload(array $files, array $sizes, array $opts = []): array
     {
-        // 1) Upload
-        $uploaded = punk_upload($files);
+        // EN: If 'debug' is truthy in $opts, enable verbose traces.
+        // IT: Se 'debug' è vero in $opts, abilita le tracce dettagliate.
+        $debug = !empty($opts['debug']);
 
-        // 2) Resize (temp)
-        $versions = punk_resize_versions($uploaded, $sizes, [
-            'dest_dir' => $opts['dest_dir'] ?? sys_get_temp_dir(),
-            'disk'     => $opts['disk']     ?? null,
-        ]);
+        // EN: Global trace array to collect step-by-step info (filled only if debug).
+        // IT: Array di traccia globale per accumulare info passo-passo (usato se debug).
+        $traceGlobal = [];
 
-        // 3) Save finale
-        $saved = punk_save_all($versions, [
-            'dest_base' => $opts['dest_base'] ?? (__DIR__.'/img'),
-            'overwrite' => $opts['overwrite'] ?? false,
-            'disk'      => $opts['disk']      ?? null,
-        ]);
+        // 🔹 NEW: dest_base chosen by the user (mandatory)
+        // EN: Require a final destination folder from the user. If missing or not a string, abort early.
+        // IT: Richiedi una cartella di destinazione finale dall’utente. Se manca o non è stringa, interrompi subito.
+        if (empty($opts['dest_base']) || !is_string($opts['dest_base'])) {
+            // EN: Human-readable error message for logs and UI.
+            // IT: Messaggio di errore leggibile per log e interfaccia.
+            $msg = '[init] Missing or invalid dest_base (user destination is required).';
 
-        // 4) Normalizza per vista
+            // EN: Write the error to your logging system (file, WP, Laravel… depending on your env).
+            // IT: Scrivi l’errore nel sistema di logging (file, WP, Laravel… a seconda dell’ambiente).
+            punk_log($msg, 'error');
+
+            // EN: Return a standardized error “card” so the caller can show it.
+            // IT: Restituisci una “scheda” di errore standardizzata così il chiamante può mostrarla.
+            return [[
+                'ok'    => false,                 // EN: The step failed | IT: Lo step è fallito
+                'name'  => 'init',                // EN: Which phase | IT: Quale fase
+                'error' => $msg,                  // EN: Error text | IT: Testo dell’errore
+                'trace' => [[                     // EN: Mini trace for this failure | IT: Mini traccia per il fallimento
+                    'step'  => 'init',
+                    'ok'    => false,
+                    'error' => $msg
+                ]]
+            ]];
+        }
+
+        // EN: Normalize destination path by removing trailing slashes/backslashes.
+        // IT: Normalizza il percorso di destinazione rimuovendo slash finali (sia / che \).
+        $destBase = rtrim($opts['dest_base'], "/\\");
+
+        // 🔹 NEW: create/validate destination folder
+        // EN: Make sure the folder exists and is writable before doing any heavy work.
+        // IT: Assicurati che la cartella esista e sia scrivibile prima di fare lavori pesanti.
+        try {
+            // EN: If the directory doesn't exist, try to create it (recursive).
+            // IT: Se la cartella non esiste, prova a crearla (ricorsivo).
+            if (!is_dir($destBase)) {
+                // EN: @ suppresses PHP warnings; we handle errors manually after.
+                // IT: @ sopprime i warning di PHP; gestiamo gli errori manualmente dopo.
+                if (!@mkdir($destBase, 0775, true) && !is_dir($destBase)) {
+                    // EN: If creation still failed, throw to jump into catch.
+                    // IT: Se la creazione fallisce comunque, lancia un’eccezione per entrare nel catch.
+                    throw new RuntimeException('Cannot create dest_base: ' . $destBase);
+                }
+            }
+
+            // EN: Check that the directory is writable by PHP (file permissions/owner).
+            // IT: Controlla che la cartella sia scrivibile da PHP (permessi/proprietario).
+            if (!is_writable($destBase)) {
+                // EN: If not writable, bail out with a clear message.
+                // IT: Se non scrivibile, interrompi con messaggio chiaro.
+                throw new RuntimeException('dest_base not writable: ' . $destBase);
+            }
+        } catch (\Throwable $e) {
+            // EN: Build a readable error including the exception message.
+            // IT: Costruisci un errore leggibile includendo il messaggio dell’eccezione.
+            $msg = '[init] ' . $e->getMessage();
+
+            // EN: Log the failure for diagnostics.
+            // IT: Logga il problema per la diagnostica.
+            punk_log($msg, 'error');
+
+            // EN: Return a standardized error “card” so the UI can show what went wrong.
+            // IT: Restituisci una “scheda” di errore standard per mostrare cosa non ha funzionato.
+            return [[
+                'ok'    => false,
+                'name'  => 'init',
+                'error' => $msg,
+                'trace' => [['step' => 'init', 'ok' => false, 'error' => $msg]]
+            ]];
+        }
+
+        // ⬇️ ... (gli step successivi: upload → resize → save)
+
+
+        // 1) Upload (com’era)
+        try {
+            // EN: Invoke the upload adapter with the raw $files input (usually from $_FILES).
+            //     It should normalize single/multiple files, validate them, and move them
+            //     to a safe temporary location. Returns an array of uploaded items.
+            // IT: Chiama l’adattatore di upload con $files (di solito da $_FILES).
+            //     Dovrebbe normalizzare singolo/multiplo, validarli e spostarli in una
+            //     posizione temporanea sicura. Ritorna un array di elementi caricati.
+            $files_organizzati_temp = punk_upload($files);
+
+            // EN: If debug mode is on, append a trace entry saying upload succeeded,
+            //     and how many files were processed.
+            // IT: Se il debug è attivo, aggiungi una voce di traccia che indica
+            //     il successo dell’upload e quanti file sono stati processati.
+            if ($debug) {
+                $traceGlobal[] = ['step' => 'upload', 'ok' => true, 'count' => count($files_organizzati_temp)];
+            }
+        } catch (\Throwable $e) {
+            // EN: Build a readable error message including the exception text.
+            // IT: Costruisci un messaggio di errore leggibile con il testo dell’eccezione.
+            $msg = '[upload] ' . $e->getMessage();
+
+            // EN: Log the error via your logging system (file/WP/Laravel) for diagnostics.
+            // IT: Logga l’errore col tuo sistema di logging (file/WP/Laravel) per diagnostica.
+            punk_log($msg, 'error');
+
+            // EN: Return a standardized "error card" so the caller/UI can show a clear status.
+            // IT: Ritorna una “scheda d’errore” standard così il chiamante/UI può mostrare lo stato chiaramente.
+            return [[
+                'ok'    => false,                                      // EN: step failed | IT: step fallito
+                'name'  => 'upload',                                   // EN: which step  | IT: quale step
+                'error' => $msg,                                       // EN: error text  | IT: testo errore
+                'trace' => [['step' => 'upload', 'ok' => false, 'error' => $msg]] // EN/IT: mini-traccia
+            ]];
+        }
+
+        /**************************************************
+         * **************RESIZE*****************************
+         *************************************************/
+        // 2) Resize (tmp) — lasciamo invariato: l’utente sceglie solo la finale
+        // EN: Step 2) Create resized versions into a TEMP folder.
+        // IT: Step 2) Crea le versioni ridotte in una cartella TEMP.
+        $versions = []; // EN: holder for resize output | IT: conterrà l’output del resize
+
+        try {
+            // EN: Call the resize engine with:
+            //     - the uploaded items ($uploaded),
+            //     - the requested size labels ($sizes),
+            //     - options: where to put temp files and (optionally) storage disk.
+            // IT: Chiama il motore di resize con:
+            //     - gli item caricati ($uploaded),
+            //     - le etichette/taglie richieste ($sizes),
+            //     - opzioni: dove mettere i file temporanei e (opzionale) il “disk”.
+            $versions = punk_resize_versions($files_organizzati_temp, $sizes, [
+                'dest_dir' => $opts['dest_dir'] ?? sys_get_temp_dir(), // EN: temp dir fallback | IT: fallback cartella tmp
+                'disk'     => $opts['disk']     ?? null,               // EN: fs adapter hint  | IT: hint per adapter fs
+            ]);
+
+            // EN: If debug is on, record that resize succeeded and how many sets returned.
+            // IT: Se debug attivo, registra il successo e quanti set sono tornati.
+            if ($debug) {
+                $traceGlobal[] = ['step' => 'resize', 'ok' => true, 'items' => count($versions)];
+            }
+        } catch (\Throwable $e) {
+            // EN: Build and log a readable error from any exception thrown during resize.
+            // IT: Costruisci e logga un errore leggibile da qualunque eccezione nel resize.
+            $msg = '[resize] ' . $e->getMessage();
+            punk_log($msg, 'error');
+
+            // EN: Stop the pipeline and return a standardized error card that includes prior traces.
+            // IT: Ferma la pipeline e ritorna una scheda d’errore standard con le trace precedenti.
+            return [[
+                'ok'    => false,
+                'name'  => 'resize',
+                'error' => $msg,
+                'trace' => array_merge($traceGlobal, [['step' => 'resize', 'ok' => false, 'error' => $msg]])
+            ]];
+        }
+
+        // 3) Save — 🔹 PASSIAMO la dest_base dell’utente
+        // --- Mappa tmp_path -> nome originale (senza estensione)
+        // EN: Build a map from each source tmp file to its original base filename (no extension).
+        // IT: Crea una mappa dal file tmp sorgente al nome originale base (senza estensione).
+        $origMap = [];
+        foreach ($files_organizzati_temp as $row) {
+            $srcTmp = $row['meta']['tmp_path'] ?? null; // EN: our managed tmp path | IT: tmp gestito
+            $nm     = $row['name'] ?? ($row['meta']['safe_name'] ?? ($srcTmp ? basename($srcTmp) : ''));
+            if ($srcTmp && $nm) {
+                // EN: Store "DSC_1234" for later naming ("DSC_1234-sm.jpg")
+                // IT: Salva "DSC_1234" per il nome finale ("DSC_1234-sm.jpg")
+                $origMap[$srcTmp] = pathinfo($nm, PATHINFO_FILENAME);
+            }
+        }
+
+        // --- Inietta l'orig_base dentro ogni set del resize
+        // EN: For each resized set, attach 'orig_base' (derived above) to use in the save step.
+        // IT: Per ogni set del resize, aggiungi 'orig_base' (derivato sopra) da usare nel salvataggio.
+        foreach ($versions as &$set) {
+            $src = $set['source'] ?? null; // EN: should be the same tmp used as input to resize
+            // IT: dovrebbe essere il tmp usato come input al resize
+            if ($src && isset($origMap[$src])) {
+                $set['orig_base'] = $origMap[$src]; // es. "DSC_1234"
+            }
+        }
+        unset($set); // EN: break reference from foreach-by-ref | IT: chiudi il riferimento del foreach
+
+
+        /**************************************************
+         * **************RESIZE*****************************
+         *************************************************/
+
+        $saved = [];
+        try {
+            // EN: Save step — pass through all the knobs the saver may need
+            // IT: Step di salvataggio — passa tutte le opzioni utili al saver
+            $saved = punk_save_all($versions, [
+                'dest_base' => $destBase,
+                'overwrite' => $opts['overwrite'] ?? false,
+                'disk'      => $opts['disk'] ?? null,
+                'sizes'     => $sizes,
+            ]);
+
+
+
+            if ($debug) {
+                $traceGlobal[] = [
+                    'step'      => 'save',
+                    'ok'        => true,
+                    'items'     => count($saved),
+                    'dest_base' => $destBase,
+                    'disk'      => $opts['disk'] ?? null, // utile in trace
+                    // 'base_url'  => $opts['base_url'] ?? null,
+                ];
+            }
+        } catch (\Throwable $e) {
+            $msg = '[save] ' . $e->getMessage();
+            punk_log($msg, 'error');
+            return [[
+                'ok' => false,
+                'name' => 'save',
+                'error' => $msg,
+                'trace' => array_merge($traceGlobal, [['step' => 'save', 'ok' => false, 'error' => $msg]])
+            ]];
+        }
+
+        // 4) Normalizzazione (com’era)...
         $out = [];
-        foreach ($saved as $set) {
-            $name = basename($set['source'] ?? '');
-            $card = ['ok'=>true, 'name'=>$name, 'versions'=>[]];
+        $nameMap = [];
+        foreach ($files_organizzati_temp as $row) {
+            $src = $row['meta']['tmp_path'] ?? null;
+            $nm  = $row['name'] ?? ($row['meta']['safe_name'] ?? ($src ? basename($src) : ''));
+            if ($src) $nameMap[$src] = $nm;
+        }
+
+        foreach ($saved as $idx => $set) {
+            $source = $set['source'] ?? null;
+            $name   = $nameMap[$source] ?? ($source ? basename($source) : '');
+
+            $card = ['ok' => true, 'name' => $name, 'versions' => [], 'trace' => $traceGlobal];
+
             foreach ($sizes as $lbl => $_) {
-                $final = $set['versions'][$lbl]['final'] ?? ($set['versions'][$lbl]['path'] ?? null);
-                if ($final && is_file($final)) {
+                $info  = $set['versions'][$lbl] ?? null;
+                $final = is_array($info) ? ($info['final'] ?? ($info['path'] ?? ($info['abs_path'] ?? null))) : null;
+
+                if ($final && is_string($final) && is_file($final)) {
                     $card['versions'][$lbl] = ['final' => $final];
+                    if ($debug) $card['trace'][] = ['step' => "save:$lbl", 'ok' => true, 'final' => $final];
                 } else {
-                    $card['versions'][$lbl] = ['final'=>null];
                     $card['ok'] = false;
+                    $err = is_array($info) ? ($info['error'] ?? 'unknown') : 'missing';
+                    $card['versions'][$lbl] = ['final' => null, 'error' => $err];
+                    if ($debug) $card['trace'][] = ['step' => "save:$lbl", 'ok' => false, 'error' => $err];
                 }
             }
             $out[] = $card;
         }
+
         return $out;
     }
 }
-

@@ -59,7 +59,7 @@ final class PUNK_ResizePhp implements PUNK_Resize
 
         // EN: Fit inside target box.
         // IT: Adatta dentro il box bersaglio.
-        [$nw, $nh] = PUNK_ResizeLogic::punk_fitBox($ow, $oh, $w, $h);
+        [$nw, $nh] = PUNK_ResizeLogic::punk_fit_box($ow, $oh, $w, $h);
 
         // EN: Ensure destination dir and temp path in same FS (atomic rename).
         // IT: Assicura la directory e tmp sullo stesso FS (rename atomico).
