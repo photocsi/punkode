@@ -1,0 +1,35 @@
+# ======================
+# Environment / config
+# ======================
+.env
+.env.*
+env.php
+config.php
+config.local.php
+
+# ======================
+# Logs / cache
+# ======================
+*.log
+cache/
+storage/
+tmp/
+
+# ======================
+# Dependencies
+# ======================
+vendor/
+node_modules/
+
+# ======================
+# Database files
+# ======================
+*.sql
+*.sqlite
+*.db
+
+# ======================
+# OS / Editor
+# ======================
+.DS_Store
+.vscode/

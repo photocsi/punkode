@@ -5,8 +5,8 @@ declare(strict_types=1);
 
 $mode = 'dev'; // ambiente dev , staging, production
 
-$pk_db_name  = "indigest";
-$pk_db_host = "127.0.0.1:3308";
+$pk_db_name  = "name";
+$pk_db_host = "host";
 $pk_db_user = "root";
 $pk_db_password = "root";
 
